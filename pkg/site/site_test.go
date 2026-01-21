@@ -74,12 +74,21 @@ func TestSetBaseDir(t *testing.T) {
 }
 
 func TestBuild(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create content directory
+	contentDir := filepath.Join(tmpDir, "content")
+	if err := os.MkdirAll(contentDir, 0755); err != nil {
+		t.Fatalf("failed to create content dir: %v", err)
+	}
+
 	site := NewWithConfig(DefaultConfig())
+	site.SetBaseDir(tmpDir)
 
 	ctx := context.Background()
 	err := site.Build(ctx)
 
-	// Build should succeed (even though it's mostly stubs)
+	// Build should succeed
 	if err != nil {
 		t.Errorf("Build failed: %v", err)
 	}
@@ -97,22 +106,39 @@ func TestBuild(t *testing.T) {
 }
 
 func TestBuildWithContext(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create content directory
+	contentDir := filepath.Join(tmpDir, "content")
+	if err := os.MkdirAll(contentDir, 0755); err != nil {
+		t.Fatalf("failed to create content dir: %v", err)
+	}
+
 	site := NewWithConfig(DefaultConfig())
+	site.SetBaseDir(tmpDir)
 
 	// Create a context that's already cancelled
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	// Build should still complete since we're not checking context yet
-	// (This will be more meaningful in later stages when we actually use context)
+	// Build should fail with context error
 	err := site.Build(ctx)
-	if err != nil {
-		t.Errorf("Build failed: %v", err)
+	if err == nil {
+		t.Error("expected error with cancelled context")
 	}
 }
 
 func TestBuildSetsTimestamp(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create content directory
+	contentDir := filepath.Join(tmpDir, "content")
+	if err := os.MkdirAll(contentDir, 0755); err != nil {
+		t.Fatalf("failed to create content dir: %v", err)
+	}
+
 	site := NewWithConfig(DefaultConfig())
+	site.SetBaseDir(tmpDir)
 
 	before := time.Now()
 	ctx := context.Background()

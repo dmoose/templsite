@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"log/slog"
 	"time"
+
+	"git.catapulsion.com/templsite/pkg/content"
 )
 
 // Site represents a static site with all its content and configuration
 type Site struct {
 	Config    *Config
+	Pages     []*content.Page
 	BuildTime time.Time
 	baseDir   string
 }
@@ -69,8 +72,18 @@ func (s *Site) Build(ctx context.Context) error {
 
 // processContent processes all content files (Stage 3)
 func (s *Site) processContent(ctx context.Context) error {
-	// TODO: Implement in Stage 3
-	slog.Debug("processing content", "dir", s.Config.Content.Dir)
+	contentPath := s.Config.ContentPath(s.baseDir)
+	slog.Debug("processing content", "dir", contentPath)
+
+	parser := content.NewParser(contentPath)
+	pages, err := parser.ParseAll(ctx)
+	if err != nil {
+		return fmt.Errorf("parsing content: %w", err)
+	}
+
+	s.Pages = pages
+	slog.Info("content processed", "pages", len(pages))
+
 	return nil
 }
 
