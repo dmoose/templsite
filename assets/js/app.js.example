@@ -1,0 +1,245 @@
+// Example JavaScript for templsite
+// This file demonstrates common patterns and utilities
+
+/**
+ * Initialize the application
+ */
+function init() {
+  console.log('templsite app initialized');
+
+  // Setup smooth scrolling for anchor links
+  setupSmoothScroll();
+
+  // Setup mobile menu toggle if present
+  setupMobileMenu();
+
+  // Setup form handling
+  setupForms();
+}
+
+/**
+ * Smooth scroll to anchor links
+ */
+function setupSmoothScroll() {
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      const href = this.getAttribute('href');
+
+      // Skip if it's just "#"
+      if (href === '#') return;
+
+      e.preventDefault();
+
+      const target = document.querySelector(href);
+      if (target) {
+        target.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    });
+  });
+}
+
+/**
+ * Setup mobile menu toggle
+ */
+function setupMobileMenu() {
+  const menuButton = document.querySelector('[data-mobile-menu-toggle]');
+  const menu = document.querySelector('[data-mobile-menu]');
+
+  if (menuButton && menu) {
+    menuButton.addEventListener('click', () => {
+      const isOpen = menu.classList.toggle('open');
+      menuButton.setAttribute('aria-expanded', isOpen);
+
+      // Toggle icon if present
+      const icon = menuButton.querySelector('[data-menu-icon]');
+      if (icon) {
+        icon.textContent = isOpen ? '✕' : '☰';
+      }
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!menu.contains(e.target) && !menuButton.contains(e.target)) {
+        menu.classList.remove('open');
+        menuButton.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+}
+
+/**
+ * Setup form handling with basic validation
+ */
+function setupForms() {
+  const forms = document.querySelectorAll('form[data-validate]');
+
+  forms.forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Clear previous errors
+      form.querySelectorAll('.error').forEach(el => el.remove());
+
+      // Validate form
+      const formData = new FormData(form);
+      const errors = validateForm(form, formData);
+
+      if (errors.length > 0) {
+        // Show errors
+        errors.forEach(error => {
+          const field = form.querySelector(`[name="${error.field}"]`);
+          if (field) {
+            const errorEl = document.createElement('div');
+            errorEl.className = 'error text-red-600 text-sm mt-1';
+            errorEl.textContent = error.message;
+            field.parentNode.appendChild(errorEl);
+          }
+        });
+        return;
+      }
+
+      // Form is valid, submit
+      console.log('Form submitted:', Object.fromEntries(formData));
+
+      // Show success message
+      const successEl = document.createElement('div');
+      successEl.className = 'success bg-green-100 text-green-800 p-4 rounded mt-4';
+      successEl.textContent = 'Form submitted successfully!';
+      form.appendChild(successEl);
+
+      // Reset form
+      form.reset();
+
+      // Remove success message after 3 seconds
+      setTimeout(() => successEl.remove(), 3000);
+    });
+  });
+}
+
+/**
+ * Validate form fields
+ */
+function validateForm(form, formData) {
+  const errors = [];
+
+  // Check required fields
+  form.querySelectorAll('[required]').forEach(field => {
+    const value = formData.get(field.name);
+    if (!value || value.trim() === '') {
+      errors.push({
+        field: field.name,
+        message: 'This field is required'
+      });
+    }
+  });
+
+  // Email validation
+  form.querySelectorAll('[type="email"]').forEach(field => {
+    const value = formData.get(field.name);
+    if (value && !isValidEmail(value)) {
+      errors.push({
+        field: field.name,
+        message: 'Please enter a valid email address'
+      });
+    }
+  });
+
+  return errors;
+}
+
+/**
+ * Check if email is valid
+ */
+function isValidEmail(email) {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
+
+/**
+ * Debounce function for performance
+ */
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+/**
+ * Throttle function for performance
+ */
+function throttle(func, limit) {
+  let inThrottle;
+  return function(...args) {
+    if (!inThrottle) {
+      func.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  };
+}
+
+/**
+ * Add class on scroll
+ */
+function setupScrollEffects() {
+  const header = document.querySelector('header');
+
+  if (header) {
+    const onScroll = throttle(() => {
+      if (window.scrollY > 100) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    }, 100);
+
+    window.addEventListener('scroll', onScroll);
+  }
+}
+
+/**
+ * Copy to clipboard utility
+ */
+function copyToClipboard(text) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      console.log('Copied to clipboard');
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+    });
+  } else {
+    // Fallback for older browsers
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+  }
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+// Export utilities for use in other scripts
+window.templsite = {
+  debounce,
+  throttle,
+  copyToClipboard,
+  isValidEmail
+};
