@@ -1,0 +1,36 @@
+package layout
+
+import (
+	"git.catapulsion.com/templsite/pkg/content"
+	"git.catapulsion.com/templsite/components/ui"
+)
+
+// Page renders a standard page layout with header, content, and footer.
+// This is the default layout for most content pages.
+templ Page(siteTitle, baseURL string, page *content.Page) {
+	@Base(page.Title, page.Description, baseURL, pageBody(siteTitle, baseURL, page))
+}
+
+// pageBody is the inner content wrapper
+templ pageBody(siteTitle, baseURL string, page *content.Page) {
+	@ui.Header(siteTitle, baseURL)
+	<main class="container mx-auto px-4 py-8">
+		<article class="prose lg:prose-xl mx-auto">
+			if page.Title != "" {
+				<h1 class="text-4xl font-bold mb-4">{ page.Title }</h1>
+			}
+			if page.Description != "" {
+				<p class="text-xl text-gray-600 mb-8">{ page.Description }</p>
+			}
+			if !page.Date.IsZero() {
+				<time class="text-sm text-gray-500" datetime={ page.Date.Format("2006-01-02") }>
+					{ page.Date.Format("January 2, 2006") }
+				</time>
+			}
+			<div class="mt-8">
+				@templ.Raw(page.Content)
+			</div>
+		</article>
+	</main>
+	@ui.Footer(siteTitle)
+}

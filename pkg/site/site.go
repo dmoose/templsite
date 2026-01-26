@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"time"
 
+	"git.catapulsion.com/templsite/components/layout"
 	"git.catapulsion.com/templsite/pkg/assets"
 	"git.catapulsion.com/templsite/pkg/content"
 )
@@ -114,9 +117,70 @@ func (s *Site) buildAssets(ctx context.Context) error {
 
 // renderPages renders all pages (Stage 6)
 func (s *Site) renderPages(ctx context.Context) error {
-	// TODO: Implement in Stage 6
-	slog.Debug("rendering pages")
+	slog.Debug("rendering pages", "count", len(s.Pages))
+
+	for _, page := range s.Pages {
+		if err := s.renderPage(ctx, page); err != nil {
+			return fmt.Errorf("rendering %s: %w", page.Path, err)
+		}
+	}
+
+	slog.Info("pages rendered", "count", len(s.Pages))
 	return nil
+}
+
+// renderPage renders a single page using the appropriate templ component
+func (s *Site) renderPage(ctx context.Context, page *content.Page) error {
+	slog.Debug("rendering page", "path", page.Path, "url", page.URL, "layout", page.Layout)
+
+	// Determine output path from URL
+	outputPath := s.getOutputPath(page.URL)
+	slog.Debug("output path determined", "url", page.URL, "outputPath", outputPath)
+
+	// Ensure output directory exists
+	outputDir := filepath.Dir(outputPath)
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		return fmt.Errorf("creating output directory %s: %w", outputDir, err)
+	}
+
+	// Create output file
+	f, err := os.Create(outputPath)
+	if err != nil {
+		return fmt.Errorf("creating output file %s: %w", outputPath, err)
+	}
+	defer f.Close()
+
+	// Select and render layout
+	component := layout.Page(s.Config.Title, s.Config.BaseURL, page)
+	if err := component.Render(ctx, f); err != nil {
+		return fmt.Errorf("rendering component: %w", err)
+	}
+
+	slog.Debug("page rendered successfully", "path", page.Path, "output", outputPath)
+	return nil
+}
+
+// getOutputPath converts a URL path to a filesystem output path
+func (s *Site) getOutputPath(url string) string {
+	outputDir := s.Config.OutputPath(s.baseDir)
+
+	// Remove leading slash
+	if len(url) > 0 && url[0] == '/' {
+		url = url[1:]
+	}
+
+	// Remove trailing slash
+	if len(url) > 0 && url[len(url)-1] == '/' {
+		url = url[:len(url)-1]
+	}
+
+	// Root URL becomes index.html
+	if url == "" {
+		return filepath.Join(outputDir, "index.html")
+	}
+
+	// All other URLs become directory/index.html for clean URLs
+	return filepath.Join(outputDir, url, "index.html")
 }
 
 // Clean removes the output directory
