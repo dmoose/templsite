@@ -1,0 +1,15 @@
+# Site Configuration
+title: "My Site"
+baseURL: "http://localhost:8080"
+
+content:
+  dir: "content"
+  defaultLayout: "page"
+
+assets:
+  inputDir: "assets"
+  outputDir: "assets"
+  minify: false
+  fingerprint: false
+
+outputDir: "public"
