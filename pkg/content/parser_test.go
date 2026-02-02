@@ -227,7 +227,8 @@ This is a **test** page with some content.
 		t.Errorf("expected URL '/test/', got '%s'", page.URL)
 	}
 
-	expectedDate := time.Date(2025, 1, 15, 0, 0, 0, 0, time.UTC)
+	// Date-only values are parsed in local timezone (what the user intends)
+	expectedDate := time.Date(2025, 1, 15, 0, 0, 0, 0, time.Local)
 	if !page.Date.Equal(expectedDate) {
 		t.Errorf("expected date %v, got %v", expectedDate, page.Date)
 	}
@@ -601,5 +602,168 @@ This is a paragraph with **bold** and *italic* text.
 		if !strings.Contains(page.Content, exp) {
 			t.Errorf("expected content to contain '%s'", exp)
 		}
+	}
+}
+
+func TestExtractSection(t *testing.T) {
+	tmpDir := t.TempDir()
+	contentDir := filepath.Join(tmpDir, "content")
+	parser := NewParser(contentDir)
+
+	tests := []struct {
+		name     string
+		path     string
+		expected string
+	}{
+		{
+			name:     "root file",
+			path:     filepath.Join(contentDir, "about.md"),
+			expected: "",
+		},
+		{
+			name:     "blog section",
+			path:     filepath.Join(contentDir, "blog", "post.md"),
+			expected: "blog",
+		},
+		{
+			name:     "nested in section",
+			path:     filepath.Join(contentDir, "docs", "guide", "intro.md"),
+			expected: "docs",
+		},
+		{
+			name:     "section index",
+			path:     filepath.Join(contentDir, "blog", "index.md"),
+			expected: "blog",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := parser.extractSection(tt.path)
+			if result != tt.expected {
+				t.Errorf("expected section '%s', got '%s'", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestParseFileNewFields(t *testing.T) {
+	tmpDir := t.TempDir()
+	contentDir := filepath.Join(tmpDir, "content", "blog")
+	if err := os.MkdirAll(contentDir, 0755); err != nil {
+		t.Fatalf("failed to create content dir: %v", err)
+	}
+
+	testFile := filepath.Join(contentDir, "test-post.md")
+	testContent := `---
+title: "Test Post"
+weight: 10
+aliases:
+  - /old-url/
+  - /another-old-url/
+---
+This is the first paragraph of the blog post and it contains enough words to test our word counting and reading time functionality.
+
+<!--more-->
+
+## Details
+
+This is the second paragraph with more details that should not appear in the summary.
+
+### Subheading
+
+And even more content here with many words to test word counting thoroughly.
+`
+
+	if err := os.WriteFile(testFile, []byte(testContent), 0644); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	parser := NewParser(filepath.Join(tmpDir, "content"))
+	ctx := context.Background()
+
+	page, err := parser.ParseFile(ctx, testFile)
+	if err != nil {
+		t.Fatalf("ParseFile failed: %v", err)
+	}
+
+	// Test Section
+	if page.Section != "blog" {
+		t.Errorf("expected section 'blog', got '%s'", page.Section)
+	}
+
+	// Test Weight
+	if page.Weight != 10 {
+		t.Errorf("expected weight 10, got %d", page.Weight)
+	}
+
+	// Test Aliases
+	if len(page.Aliases) != 2 {
+		t.Errorf("expected 2 aliases, got %d", len(page.Aliases))
+	}
+
+	// Test RawContent (should not include frontmatter)
+	if page.RawContent == "" {
+		t.Error("expected non-empty RawContent")
+	}
+	if strings.Contains(page.RawContent, "title:") {
+		t.Error("RawContent should not contain frontmatter")
+	}
+
+	// Test WordCount
+	if page.WordCount == 0 {
+		t.Error("expected non-zero WordCount")
+	}
+
+	// Test ReadingTime (with the current content, should be at least 1 minute)
+	if page.ReadingTime == 0 {
+		t.Error("expected non-zero ReadingTime")
+	}
+
+	// Test Summary (should contain first paragraph content)
+	if page.Summary == "" {
+		t.Error("expected non-empty Summary")
+	}
+	if !strings.Contains(page.Summary, "first paragraph") {
+		t.Error("Summary should contain first paragraph content")
+	}
+	// Content after <!--more--> should not be in summary
+	if strings.Contains(page.Summary, "should not appear") {
+		t.Error("Summary should not contain content after <!--more-->")
+	}
+
+	// Test TOC (should have entries for h2, h3)
+	if page.TOC == "" {
+		t.Error("expected non-empty TOC")
+	}
+	if !strings.Contains(page.TOC, "Details") {
+		t.Error("TOC should contain h2 heading 'Details'")
+	}
+	if !strings.Contains(page.TOC, "Subheading") {
+		t.Error("TOC should contain h3 heading 'Subheading'")
+	}
+}
+
+func TestGetIntDefault(t *testing.T) {
+	m := map[string]any{
+		"int":     42,
+		"float":   3.14,
+		"string":  "not an int",
+	}
+
+	if got := getIntDefault(m, "int", 0); got != 42 {
+		t.Errorf("expected 42, got %d", got)
+	}
+
+	if got := getIntDefault(m, "float", 0); got != 3 {
+		t.Errorf("expected 3 (from float64), got %d", got)
+	}
+
+	if got := getIntDefault(m, "string", 99); got != 99 {
+		t.Errorf("expected default 99 for non-int, got %d", got)
+	}
+
+	if got := getIntDefault(m, "missing", 100); got != 100 {
+		t.Errorf("expected default 100, got %d", got)
 	}
 }

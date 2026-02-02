@@ -179,7 +179,7 @@ From the user's perspective, this complexity is hidden:
 
 ```bash
 # 1. Scaffold new site
-templsite new mysite --template minimal --templsite-path /path/to/templsite
+templsite new mysite --template tailwind --templsite-path /path/to/templsite
 
 # 2. Enter directory
 cd mysite
@@ -209,7 +209,7 @@ Everything in their site directory:
    - Standard static site generator workflow
 
 3. **Assets** (`assets/`)
-   - CSS with Tailwind + DaisyUI
+   - CSS with Tailwind
    - JavaScript utilities
    - Static files (images, fonts, etc.)
 
@@ -351,7 +351,7 @@ When templsite is published to a real module repository (not local development):
 
 ```bash
 # User creates site
-templsite new mysite --template minimal
+templsite new mysite --template tailwind
 
 # Edit go.mod to remove replace directive
 # Or templsite does this automatically for production
@@ -365,20 +365,19 @@ go build
 # Upload public/ to hosting
 ```
 
-### Component Registry (Stage 10)
+### Component Management (fstctl)
 
-Even with this architecture, a component registry (templ-store) can work:
+For the fastatic path, component management is handled by `fstctl` (from go-components):
 
 ```bash
-# Install a component
 cd mysite
-templsite components add navbar-fancy
+fstctl add navbar hero card button
 
-# This copies the component into mysite/components/
-# User's next build includes it
+# Components are installed to lib/ with dependencies
+# User's next build includes them
 ```
 
-Components are still just `.templ` files that get compiled into the user's binary.
+Components are `.templ` files that get compiled into the user's binary.
 
 ### Multiple Layouts
 

@@ -59,3 +59,10 @@ test-site/
 # Release artifacts
 *.tar.gz
 *.zip
+
+# Checkpoint artifacts (temporary files, not tracked)
+.checkpoint-input
+.checkpoint-diff
+.checkpoint-lock
+.checkpoint-status.yaml
+.checkpoint-session.yaml

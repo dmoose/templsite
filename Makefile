@@ -11,6 +11,12 @@ GOMOD=$(GOCMD) mod
 BINARY_NAME=templsite
 BINARY_PATH=./bin/$(BINARY_NAME)
 
+# Version info for builds
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
+BUILD_TIME := $(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
+LDFLAGS := -X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.buildTime=$(BUILD_TIME)
+
 # Tailwind CSS standalone CLI
 # Note: Update this to the latest version from https://github.com/tailwindlabs/tailwindcss/releases
 TAILWIND_VERSION=latest
@@ -73,19 +79,19 @@ setup: deps setup-tailwind ## Complete project setup
 generate: ## Generate templ components
 	@echo "Generating templ components..."
 	@command -v templ >/dev/null 2>&1 || { echo "Installing templ CLI..."; $(GOINSTALL) github.com/a-h/templ/cmd/templ@latest; }
-	@templ generate
+	@templ generate -path ./components
 	@echo "✓ Components generated"
 
 build: deps generate ## Build the binary
 	@echo "Building $(BINARY_NAME)..."
 	@mkdir -p bin
-	$(GOBUILD) -o $(BINARY_PATH) ./cmd/templsite
+	$(GOBUILD) -ldflags "$(LDFLAGS)" -o $(BINARY_PATH) ./cmd/templsite
 	@echo "✓ Binary built: $(BINARY_PATH)"
 
-build-release: deps ## Build release binary with version info
+build-release: deps ## Build release binary (stripped)
 	@echo "Building release binary..."
 	@mkdir -p bin
-	$(GOBUILD) -ldflags="-s -w -X main.version=$(VERSION)" -o $(BINARY_PATH) ./cmd/templsite
+	$(GOBUILD) -ldflags "-s -w $(LDFLAGS)" -o $(BINARY_PATH) ./cmd/templsite
 	@echo "✓ Release binary built: $(BINARY_PATH)"
 
 test: ## Run tests
@@ -108,7 +114,7 @@ clean: ## Clean build artifacts
 
 install: build ## Install binary to GOPATH
 	@echo "Installing $(BINARY_NAME)..."
-	$(GOINSTALL) ./cmd/templsite
+	$(GOINSTALL) -ldflags "$(LDFLAGS)" ./cmd/templsite
 	@echo "✓ Installed to $(GOPATH)/bin/$(BINARY_NAME)"
 
 dev: build ## Start development mode

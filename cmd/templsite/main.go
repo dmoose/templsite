@@ -11,6 +11,14 @@ import (
 	"git.catapulsion.com/templsite/cmd/templsite/commands"
 )
 
+// Version information set via ldflags at build time
+// go build -ldflags "-X main.version=v1.0.0 -X main.commit=abc123 -X main.buildTime=..."
+var (
+	version   = "dev"
+	commit    = "unknown"
+	buildTime = "unknown"
+)
+
 func main() {
 	// Setup structured logging
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
@@ -41,8 +49,6 @@ func run(ctx context.Context, args []string) error {
 		return commands.Serve(ctx, args[1:])
 	case "build":
 		return commands.Build(ctx, args[1:])
-	case "components":
-		return commands.Components(ctx, args[1:])
 	case "help", "--help", "-h":
 		return showHelp()
 	case "version", "--version", "-v":
@@ -62,25 +68,27 @@ Commands:
   new          Create a new site from a template
   build        Build the site for production
   serve        Start development server with live reload
-  components   Manage templ components
   version      Show version information
   help         Show this help message
 
 Examples:
-  templsite new mysite --template business
+  templsite new --template tailwind mysite
+  templsite new --template fastatic --templsite-path ../templsite mysite
   templsite build
   templsite serve --port 8080
 
 For more information about a command:
   templsite <command> --help
 
-Documentation: https://github.com/yourorg/templsite`)
+Documentation: https://github.com/dmoose/templsite`)
 	return nil
 }
 
 func showVersion() error {
-	// Version will be set via build flags
-	version := "dev"
-	fmt.Printf("templsite version %s\n", version)
+	c := commit
+	if len(c) > 7 {
+		c = c[:7]
+	}
+	fmt.Printf("templsite version %s (%s) built %s\n", version, c, buildTime)
 	return nil
 }
