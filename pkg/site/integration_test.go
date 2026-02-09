@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"git.catapulsion.com/templsite/pkg/content"
+	"github.com/dmoose/templsite/pkg/content"
 )
 
 func TestIntegrationFullBuild(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"encoding/xml"
 	"time"
 
-	"git.catapulsion.com/templsite/pkg/content"
+	"github.com/dmoose/templsite/pkg/content"
 )
 
 // RSSFeed represents an RSS 2.0 feed

@@ -1,4 +1,4 @@
-module git.catapulsion.com/templsite
+module github.com/dmoose/templsite
 
 go 1.25.5
 

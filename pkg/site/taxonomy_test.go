@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"git.catapulsion.com/templsite/pkg/content"
+	"github.com/dmoose/templsite/pkg/content"
 )
 
 func TestSlugify(t *testing.T) {

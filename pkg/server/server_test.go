@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"git.catapulsion.com/templsite/pkg/site"
+	"github.com/dmoose/templsite/pkg/site"
 )
 
 func TestGetContentType(t *testing.T) {

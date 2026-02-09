@@ -3,7 +3,7 @@ package site
 import (
 	"strings"
 
-	"git.catapulsion.com/templsite/pkg/content"
+	"github.com/dmoose/templsite/pkg/content"
 )
 
 // RegularPages returns all non-index, published pages across all sections

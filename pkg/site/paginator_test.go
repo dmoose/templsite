@@ -3,7 +3,7 @@ package site
 import (
 	"testing"
 
-	"git.catapulsion.com/templsite/pkg/content"
+	"github.com/dmoose/templsite/pkg/content"
 )
 
 func TestNewPaginator(t *testing.T) {

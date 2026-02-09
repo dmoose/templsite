@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"git.catapulsion.com/templsite/pkg/content"
+	"github.com/dmoose/templsite/pkg/content"
 )
 
 // Paginator handles pagination of page collections with navigation URLs

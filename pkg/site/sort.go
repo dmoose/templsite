@@ -3,7 +3,7 @@ package site
 import (
 	"sort"
 
-	"git.catapulsion.com/templsite/pkg/content"
+	"github.com/dmoose/templsite/pkg/content"
 )
 
 // SortByDate returns a copy of pages sorted by date

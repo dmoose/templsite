@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"git.catapulsion.com/templsite/pkg/content"
+	"github.com/dmoose/templsite/pkg/content"
 )
 
 // Taxonomy represents a classification system (e.g., tags, categories)

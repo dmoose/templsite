@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"git.catapulsion.com/templsite/internal/watch"
-	"git.catapulsion.com/templsite/pkg/site"
+	"github.com/dmoose/templsite/internal/watch"
+	"github.com/dmoose/templsite/pkg/site"
 )
 
 // RenderFunc is a function that renders all pages for a site

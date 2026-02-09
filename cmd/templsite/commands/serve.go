@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"os"
 
-	"git.catapulsion.com/templsite/pkg/server"
-	"git.catapulsion.com/templsite/pkg/site"
+	"github.com/dmoose/templsite/pkg/server"
+	"github.com/dmoose/templsite/pkg/site"
 )
 
 // Serve starts the development server with live reload

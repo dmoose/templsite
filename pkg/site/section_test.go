@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"git.catapulsion.com/templsite/pkg/content"
+	"github.com/dmoose/templsite/pkg/content"
 )
 
 func TestSectionPageCount(t *testing.T) {

@@ -10,9 +10,9 @@ import (
 	"syscall"
 
 	"{{.ModulePath}}/components/layout"
-	"git.catapulsion.com/templsite/pkg/scaffold"
-	"git.catapulsion.com/templsite/pkg/server"
-	"git.catapulsion.com/templsite/pkg/site"
+	"github.com/dmoose/templsite/pkg/scaffold"
+	"github.com/dmoose/templsite/pkg/server"
+	"github.com/dmoose/templsite/pkg/site"
 )
 
 func main() {
@@ -31,7 +31,11 @@ func run(ctx context.Context) error {
 	}
 
 	// Extract --env flag from remaining args
-	env := extractFlag(os.Args[2:], "env")
+	var flagArgs []string
+	if len(os.Args) > 2 {
+		flagArgs = os.Args[2:]
+	}
+	env := extractFlag(flagArgs, "env")
 
 	switch command {
 	case "build":
