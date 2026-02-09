@@ -1,0 +1,41 @@
+package layout
+
+templ Base(meta PageMeta, content templ.Component) {
+	<!DOCTYPE html>
+	<html lang={ meta.Language }>
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ meta.Title }</title>
+			<meta name="description" content={ meta.Description }/>
+			<!-- Open Graph -->
+			<meta property="og:title" content={ meta.Title }/>
+			<meta property="og:description" content={ meta.Description }/>
+			<meta property="og:url" content={ meta.BaseURL + meta.URL }/>
+			<meta property="og:site_name" content={ meta.SiteName }/>
+			<meta property="og:type" content="website"/>
+			<!-- Canonical -->
+			<link rel="canonical" href={ meta.BaseURL + meta.URL }/>
+			<!-- Favicons -->
+			<link rel="icon" href={ meta.BaseURL + "/favicon.svg" } type="image/svg+xml"/>
+			<link rel="apple-touch-icon" href={ meta.BaseURL + "/apple-touch-icon.png" }/>
+			if meta.ThemeColor != "" {
+				<meta name="theme-color" content={ meta.ThemeColor }/>
+			}
+			<link rel="manifest" href={ meta.BaseURL + "/site.webmanifest" }/>
+			<!-- Feed -->
+			<link rel="alternate" type="application/atom+xml" title={ meta.SiteName + " Feed" } href={ meta.BaseURL + "/feed.xml" }/>
+			<!-- Font -->
+			<link rel="preconnect" href="https://fonts.googleapis.com"/>
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+			<!-- Assets -->
+			<link rel="stylesheet" href={ meta.BaseURL + "/assets/css/main.css?v=" + meta.AssetVersion }/>
+			<link rel="stylesheet" href={ meta.BaseURL + "/assets/css/custom.css?v=" + meta.AssetVersion }/>
+			<script src={ meta.BaseURL + "/assets/js/theme-init.js?v=" + meta.AssetVersion }></script>
+		</head>
+		<body>
+			@content
+			<script src={ meta.BaseURL + "/assets/js/components.js?v=" + meta.AssetVersion }></script>
+		</body>
+	</html>
+}
