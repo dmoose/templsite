@@ -7,11 +7,11 @@ import (
 
 func TestGenerateTOC(t *testing.T) {
 	tests := []struct {
-		name       string
-		html       string
-		minLevel   int
-		maxLevel   int
-		wantEmpty  bool
+		name        string
+		html        string
+		minLevel    int
+		maxLevel    int
+		wantEmpty   bool
 		wantContain []string
 	}{
 		{

@@ -746,9 +746,9 @@ And even more content here with many words to test word counting thoroughly.
 
 func TestGetIntDefault(t *testing.T) {
 	m := map[string]any{
-		"int":     42,
-		"float":   3.14,
-		"string":  "not an int",
+		"int":    42,
+		"float":  3.14,
+		"string": "not an int",
 	}
 
 	if got := getIntDefault(m, "int", 0); got != 42 {

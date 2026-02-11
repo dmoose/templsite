@@ -19,6 +19,9 @@ var whitespaceRegex = regexp.MustCompile(`\s+`)
 // must be stripped from summaries and descriptions.
 var footnoteRefRegex = regexp.MustCompile(`<sup[^>]*>.*?</sup>`)
 
+// closeTagRegex matches opening and closing HTML tags
+var closeTagRegex = regexp.MustCompile(`<(/?)(\w+)[^>]*>`)
+
 // StripHTML removes HTML tags from a string
 func StripHTML(html string) string {
 	// Remove HTML tags
@@ -252,9 +255,7 @@ func isInsideTag(html string, pos int) bool {
 // closeOpenTags closes any unclosed HTML tags
 func closeOpenTags(html string) string {
 	var openTags []string
-	tagRegex := regexp.MustCompile(`<(/?)(\w+)[^>]*>`)
-
-	matches := tagRegex.FindAllStringSubmatch(html, -1)
+	matches := closeTagRegex.FindAllStringSubmatch(html, -1)
 	for _, match := range matches {
 		isClosing := match[1] == "/"
 		tagName := strings.ToLower(match[2])

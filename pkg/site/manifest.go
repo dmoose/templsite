@@ -6,14 +6,14 @@ import (
 
 // webManifest represents a PWA web manifest
 type webManifest struct {
-	Name        string           `json:"name"`
-	ShortName   string           `json:"short_name"`
-	Description string           `json:"description,omitempty"`
-	StartURL    string           `json:"start_url"`
-	Display     string           `json:"display"`
-	ThemeColor  string           `json:"theme_color,omitempty"`
-	BgColor     string           `json:"background_color"`
-	Icons       []manifestIcon   `json:"icons"`
+	Name        string         `json:"name"`
+	ShortName   string         `json:"short_name"`
+	Description string         `json:"description,omitempty"`
+	StartURL    string         `json:"start_url"`
+	Display     string         `json:"display"`
+	ThemeColor  string         `json:"theme_color,omitempty"`
+	BgColor     string         `json:"background_color"`
+	Icons       []manifestIcon `json:"icons"`
 }
 
 // manifestIcon represents an icon entry in the manifest

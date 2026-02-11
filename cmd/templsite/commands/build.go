@@ -2,7 +2,6 @@ package commands
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log/slog"
 	"os"
@@ -10,73 +9,72 @@ import (
 	"time"
 
 	"github.com/dmoose/templsite/pkg/site"
+	"github.com/spf13/cobra"
 )
 
-// Build builds the site for production
-func Build(ctx context.Context, args []string) error {
-	// Parse flags
-	fs := flag.NewFlagSet("build", flag.ExitOnError)
-	configPath := fs.String("config", "config.yaml", "path to configuration file")
-	env := fs.String("env", "", "environment (loads config.<env>.yaml overrides)")
-	outputDir := fs.String("output", "", "output directory (overrides config)")
-	verbose := fs.Bool("verbose", false, "enable verbose logging")
-	clean := fs.Bool("clean", false, "clean output directory before build")
+// NewBuildCmd creates the "build" command
+func NewBuildCmd(ctx context.Context) *cobra.Command {
+	var (
+		configPath string
+		env        string
+		outputDir  string
+		verbose    bool
+		clean      bool
+	)
 
-	fs.Usage = func() {
-		fmt.Fprintf(os.Stderr, `Usage: templsite build [options]
-
-Build the site for production. Processes content, assets, and renders all pages.
-
-Options:
-`)
-		fs.PrintDefaults()
-		fmt.Fprintf(os.Stderr, `
-Examples:
-  templsite build
+	cmd := &cobra.Command{
+		Use:   "build",
+		Short: "Build the site for production",
+		Long:  "Build the site for production. Processes content, assets, and renders all pages.",
+		Example: `  templsite build
   templsite build --env production
   templsite build --config site.yaml
   templsite build --output dist --verbose
-  templsite build --clean
-
-`)
+  templsite build --clean`,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runBuild(ctx, configPath, env, outputDir, verbose, clean)
+		},
 	}
 
-	if err := fs.Parse(args); err != nil {
-		return err
-	}
+	cmd.Flags().StringVar(&configPath, "config", "config.yaml", "path to configuration file")
+	cmd.Flags().StringVar(&env, "env", "", "environment (loads config.<env>.yaml overrides)")
+	cmd.Flags().StringVar(&outputDir, "output", "", "output directory (overrides config)")
+	cmd.Flags().BoolVar(&verbose, "verbose", false, "enable verbose logging")
+	cmd.Flags().BoolVar(&clean, "clean", false, "clean output directory before build")
 
+	return cmd
+}
+
+func runBuild(ctx context.Context, configPath, env, outputDir string, verbose, clean bool) error {
 	// Setup logging level
-	logLevel := slog.LevelInfo
-	if *verbose {
-		logLevel = slog.LevelDebug
+	if verbose {
+		logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		slog.SetDefault(logger)
 	}
-	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-		Level: logLevel,
-	}))
-	slog.SetDefault(logger)
 
-	slog.Debug("build command started", "config", *configPath, "verbose", *verbose)
+	slog.Debug("build command started", "config", configPath, "verbose", verbose)
 
 	// Check if config file exists
-	if _, err := os.Stat(*configPath); os.IsNotExist(err) {
-		return fmt.Errorf("config file not found: %s\n\nRun 'templsite new <sitename>' to create a new site", *configPath)
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		return fmt.Errorf("config file not found: %s\n\nRun 'templsite new <sitename>' to create a new site", configPath)
 	}
 
 	// Load site configuration
-	slog.Info("loading configuration", "path", *configPath, "env", *env)
-	s, err := site.NewWithEnv(*configPath, *env)
+	slog.Info("loading configuration", "path", configPath, "env", env)
+	s, err := site.NewWithEnv(configPath, env)
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
 	// Override output directory if specified
-	if *outputDir != "" {
-		slog.Debug("overriding output directory", "dir", *outputDir)
-		s.Config.OutputDir = *outputDir
+	if outputDir != "" {
+		slog.Debug("overriding output directory", "dir", outputDir)
+		s.Config.OutputDir = outputDir
 	}
 
 	// Get absolute paths for reporting
-	absConfigPath, _ := filepath.Abs(*configPath)
+	absConfigPath, _ := filepath.Abs(configPath)
 	absOutputPath, _ := filepath.Abs(s.Config.OutputPath("."))
 
 	slog.Info("build configuration",
@@ -86,7 +84,7 @@ Examples:
 	)
 
 	// Clean output directory if requested
-	if *clean {
+	if clean {
 		slog.Info("cleaning output directory", "dir", absOutputPath)
 		if err := os.RemoveAll(absOutputPath); err != nil {
 			slog.Warn("failed to clean output directory", "error", err)

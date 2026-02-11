@@ -61,7 +61,7 @@ func (s *Server) Serve(ctx context.Context) error {
 	s.liveReload.Start(ctx)
 
 	// Setup file watching
-	if err := s.setupWatching(); err != nil {
+	if err := s.setupWatching(ctx); err != nil {
 		return fmt.Errorf("setting up file watching: %w", err)
 	}
 
@@ -101,7 +101,7 @@ func (s *Server) Serve(ctx context.Context) error {
 }
 
 // setupWatching configures file system watching
-func (s *Server) setupWatching() error {
+func (s *Server) setupWatching(ctx context.Context) error {
 	// Watch content directory
 	contentDir := s.site.Config.ContentPath(".")
 	if _, err := os.Stat(contentDir); err == nil {
@@ -134,7 +134,7 @@ func (s *Server) setupWatching() error {
 	}
 
 	// Start watcher
-	s.watcher.Start(context.Background())
+	s.watcher.Start(ctx)
 
 	slog.Info("file watching started",
 		"content", contentDir,

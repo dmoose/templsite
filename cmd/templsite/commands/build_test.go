@@ -63,8 +63,7 @@ title: "Test Page"
 
 	// Run build command
 	ctx := context.Background()
-	args := []string{}
-	err := Build(ctx, args)
+	err := runBuild(ctx, "config.yaml", "", "", false, false)
 	if err != nil {
 		t.Fatalf("build command failed: %v", err)
 	}
@@ -131,8 +130,7 @@ title: "Page"
 
 	// Test with custom config path
 	ctx := context.Background()
-	args := []string{"--config", "site.yaml"}
-	err := Build(ctx, args)
+	err := runBuild(ctx, "site.yaml", "", "", false, false)
 	if err != nil {
 		t.Fatalf("build with --config failed: %v", err)
 	}
@@ -190,8 +188,7 @@ title: "Page"
 
 	// Build with output override
 	ctx := context.Background()
-	args := []string{"--output", "build"}
-	err := Build(ctx, args)
+	err := runBuild(ctx, "config.yaml", "", "build", false, false)
 	if err != nil {
 		t.Fatalf("build with --output failed: %v", err)
 	}
@@ -265,8 +262,7 @@ title: "New"
 
 	// Build with clean
 	ctx := context.Background()
-	args := []string{"--clean"}
-	err := Build(ctx, args)
+	err := runBuild(ctx, "config.yaml", "", "", false, true)
 	if err != nil {
 		t.Fatalf("build with --clean failed: %v", err)
 	}
@@ -294,8 +290,7 @@ func TestBuildCommandMissingConfig(t *testing.T) {
 
 	// Try to build without config
 	ctx := context.Background()
-	args := []string{}
-	err := Build(ctx, args)
+	err := runBuild(ctx, "config.yaml", "", "", false, false)
 	if err == nil {
 		t.Fatal("expected error for missing config, got nil")
 	}
@@ -348,8 +343,7 @@ title: "Page"
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	args := []string{}
-	err := Build(ctx, args)
+	err := runBuild(ctx, "config.yaml", "", "", false, false)
 
 	// Build might complete before cancellation, or it might be cancelled
 	// Either is acceptable for this test

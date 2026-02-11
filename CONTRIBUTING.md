@@ -14,7 +14,7 @@ make test     # Run tests with race detector
 
 ### Prerequisites
 
-- Go 1.21+
+- Go 1.25+
 - [templ](https://templ.guide/) CLI (`go install github.com/a-h/templ/cmd/templ@latest`)
 
 ## Making Changes

@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/dmoose/templsite/cmd/templsite/commands"
+	"github.com/spf13/cobra"
 )
 
 // Version information set via ldflags at build time
@@ -31,64 +32,32 @@ func main() {
 		syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	if err := run(ctx, os.Args[1:]); err != nil {
-		slog.Error("command failed", "error", err)
+	root := newRootCmd(ctx)
+	if err := root.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context, args []string) error {
-	if len(args) == 0 {
-		return showHelp()
-	}
-
-	switch args[0] {
-	case "new":
-		return commands.New(ctx, args[1:])
-	case "serve":
-		return commands.Serve(ctx, args[1:])
-	case "build":
-		return commands.Build(ctx, args[1:])
-	case "help", "--help", "-h":
-		return showHelp()
-	case "version", "--version", "-v":
-		return showVersion()
-	default:
-		return fmt.Errorf("unknown command: %s\n\nRun 'templsite help' for usage", args[0])
-	}
-}
-
-func showHelp() error {
-	fmt.Println(`templsite - A modern static site generator built with Go and templ
-
-Usage:
-  templsite <command> [arguments]
-
-Commands:
-  new          Create a new site from a template
-  build        Build the site for production
-  serve        Start development server with live reload
-  version      Show version information
-  help         Show this help message
-
-Examples:
-  templsite new --template tailwind mysite
-  templsite new --template fastatic --templsite-path ../templsite mysite
-  templsite build
-  templsite serve --port 8080
-
-For more information about a command:
-  templsite <command> --help
-
-Documentation: https://github.com/dmoose/templsite`)
-	return nil
-}
-
-func showVersion() error {
+func newRootCmd(ctx context.Context) *cobra.Command {
 	c := commit
 	if len(c) > 7 {
 		c = c[:7]
 	}
-	fmt.Printf("templsite version %s (%s) built %s\n", version, c, buildTime)
-	return nil
+
+	root := &cobra.Command{
+		Use:           "templsite",
+		Short:         "A modern static site generator built with Go and templ",
+		Long:          "templsite - A modern static site generator built with Go and templ\n\nDocumentation: https://github.com/dmoose/templsite",
+		Version:       fmt.Sprintf("%s (%s) built %s", version, c, buildTime),
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
+
+	root.SetVersionTemplate("templsite version {{.Version}}\n")
+
+	root.AddCommand(commands.NewNewCmd(ctx))
+	root.AddCommand(commands.NewBuildCmd(ctx))
+	root.AddCommand(commands.NewServeCmd(ctx))
+
+	return root
 }

@@ -2,75 +2,73 @@ package commands
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log/slog"
 	"os"
 
 	"github.com/dmoose/templsite/pkg/server"
 	"github.com/dmoose/templsite/pkg/site"
+	"github.com/spf13/cobra"
 )
 
-// Serve starts the development server with live reload
-func Serve(ctx context.Context, args []string) error {
-	// Parse flags
-	fs := flag.NewFlagSet("serve", flag.ExitOnError)
-	configPath := fs.String("config", "config.yaml", "path to configuration file")
-	env := fs.String("env", "", "environment (loads config.<env>.yaml overrides)")
-	port := fs.Int("port", 8080, "port to listen on")
-	addr := fs.String("addr", "", "address to bind to (default: localhost:<port>)")
-	verbose := fs.Bool("verbose", false, "enable verbose logging")
+// NewServeCmd creates the "serve" command
+func NewServeCmd(ctx context.Context) *cobra.Command {
+	var (
+		configPath string
+		env        string
+		port       int
+		addr       string
+		verbose    bool
+	)
 
-	fs.Usage = func() {
-		fmt.Fprintf(os.Stderr, `Usage: templsite serve [options]
-
-Start a development server with live reload. Watches for file changes and
-automatically rebuilds the site and refreshes the browser.
-
-Options:
-`)
-		fs.PrintDefaults()
-		fmt.Fprintf(os.Stderr, `
-Examples:
-  templsite serve
+	cmd := &cobra.Command{
+		Use:   "serve",
+		Short: "Start development server with live reload",
+		Long: `Start a development server with live reload. Watches for file changes and
+automatically rebuilds the site and refreshes the browser.`,
+		Example: `  templsite serve
   templsite serve --env staging
   templsite serve --port 3000
   templsite serve --config site.yaml --verbose
-  templsite serve --addr 0.0.0.0:8080
-
-`)
+  templsite serve --addr 0.0.0.0:8080`,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runServe(ctx, configPath, env, port, addr, verbose)
+		},
 	}
 
-	if err := fs.Parse(args); err != nil {
-		return err
-	}
+	cmd.Flags().StringVar(&configPath, "config", "config.yaml", "path to configuration file")
+	cmd.Flags().StringVar(&env, "env", "", "environment (loads config.<env>.yaml overrides)")
+	cmd.Flags().IntVar(&port, "port", 8080, "port to listen on")
+	cmd.Flags().StringVar(&addr, "addr", "", "address to bind to (default: localhost:<port>)")
+	cmd.Flags().BoolVar(&verbose, "verbose", false, "enable verbose logging")
 
+	return cmd
+}
+
+func runServe(ctx context.Context, configPath, env string, port int, addr string, verbose bool) error {
 	// Setup logging level
-	logLevel := slog.LevelInfo
-	if *verbose {
-		logLevel = slog.LevelDebug
+	if verbose {
+		logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		slog.SetDefault(logger)
 	}
-	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-		Level: logLevel,
-	}))
-	slog.SetDefault(logger)
 
 	// Determine address
-	serverAddr := *addr
+	serverAddr := addr
 	if serverAddr == "" {
-		serverAddr = fmt.Sprintf("localhost:%d", *port)
+		serverAddr = fmt.Sprintf("localhost:%d", port)
 	}
 
-	slog.Debug("serve command started", "config", *configPath, "addr", serverAddr)
+	slog.Debug("serve command started", "config", configPath, "addr", serverAddr)
 
 	// Check if config file exists
-	if _, err := os.Stat(*configPath); os.IsNotExist(err) {
-		return fmt.Errorf("config file not found: %s\n\nRun 'templsite new <sitename>' to create a new site", *configPath)
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		return fmt.Errorf("config file not found: %s\n\nRun 'templsite new <sitename>' to create a new site", configPath)
 	}
 
 	// Load site configuration
-	slog.Info("loading configuration", "path", *configPath, "env", *env)
-	s, err := site.NewWithEnv(*configPath, *env)
+	slog.Info("loading configuration", "path", configPath, "env", env)
+	s, err := site.NewWithEnv(configPath, env)
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}

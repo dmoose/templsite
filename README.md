@@ -174,7 +174,7 @@ Basic Go helps, but you can get started by editing Markdown content, customizing
 
 ## Requirements
 
-- Go 1.21+
+- Go 1.25+
 - [templ](https://templ.guide/) CLI
 
 ## License

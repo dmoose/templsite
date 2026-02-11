@@ -3,7 +3,6 @@ package commands
 import (
 	"bytes"
 	"context"
-	"flag"
 	"fmt"
 	"io"
 	"io/fs"
@@ -15,47 +14,56 @@ import (
 	"text/template"
 
 	"github.com/dmoose/templsite/cmd/templsite/templates"
+	"github.com/spf13/cobra"
 )
 
-// New creates a new site from a template
-func New(ctx context.Context, args []string) error {
-	// Parse flags
-	flags := flag.NewFlagSet("new", flag.ExitOnError)
-	templateName := flags.String("template", "tailwind", "Template to use (tailwind, fastatic)")
-	verbose := flags.Bool("verbose", false, "Enable verbose logging")
-	templsitePath := flags.String("templsite-path", "", "Path to local templsite for development (optional)")
+// NewNewCmd creates the "new" command
+func NewNewCmd(ctx context.Context) *cobra.Command {
+	var (
+		templateName  string
+		verbose       bool
+		templsitePath string
+	)
 
-	if err := flags.Parse(args); err != nil {
-		return fmt.Errorf("parsing flags: %w", err)
+	cmd := &cobra.Command{
+		Use:   "new <site-path>",
+		Short: "Create a new site from a template",
+		Long: `Create a new site from a template. The site path will be used as the
+Go module name and directory name.`,
+		Example: `  templsite new mysite
+  templsite new mysite --template fastatic
+  templsite new mysite --template tailwind --templsite-path ../templsite`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runNew(ctx, args[0], templateName, verbose, templsitePath)
+		},
 	}
 
+	cmd.Flags().StringVar(&templateName, "template", "tailwind", "template to use (tailwind, fastatic)")
+	cmd.Flags().BoolVar(&verbose, "verbose", false, "enable verbose logging")
+	cmd.Flags().StringVar(&templsitePath, "templsite-path", "", "path to local templsite for development")
+
+	return cmd
+}
+
+func runNew(ctx context.Context, sitePath, templateName string, verbose bool, templsitePath string) error {
 	// Setup logging
-	logLevel := slog.LevelInfo
-	if *verbose {
-		logLevel = slog.LevelDebug
+	if verbose {
+		logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		slog.SetDefault(logger)
 	}
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel}))
-	slog.SetDefault(logger)
-
-	// Get site path from remaining args
-	remainingArgs := flags.Args()
-	if len(remainingArgs) == 0 {
-		return fmt.Errorf("usage: templsite new [--template <name>] [--templsite-path <path>] <site-path>\nAvailable templates: %s", strings.Join(templates.ListTemplates(), ", "))
-	}
-
-	sitePath := remainingArgs[0]
 
 	// Validate template exists
 	availableTemplates := templates.ListTemplates()
 	templateValid := false
 	for _, t := range availableTemplates {
-		if t == *templateName {
+		if t == templateName {
 			templateValid = true
 			break
 		}
 	}
 	if !templateValid {
-		return fmt.Errorf("unknown template %q. Available templates: %s", *templateName, strings.Join(availableTemplates, ", "))
+		return fmt.Errorf("unknown template %q. Available templates: %s", templateName, strings.Join(availableTemplates, ", "))
 	}
 
 	// Check if path already exists
@@ -63,10 +71,10 @@ func New(ctx context.Context, args []string) error {
 		return fmt.Errorf("path %q already exists", sitePath)
 	}
 
-	slog.Info("creating new site", "path", sitePath, "template", *templateName)
+	slog.Info("creating new site", "path", sitePath, "template", templateName)
 
 	// Get template filesystem
-	templateFS, err := templates.GetTemplate(*templateName)
+	templateFS, err := templates.GetTemplate(templateName)
 	if err != nil {
 		return fmt.Errorf("loading template: %w", err)
 	}
@@ -113,8 +121,8 @@ func New(ctx context.Context, args []string) error {
 	}
 
 	// Add replace directive if local templsite path is provided
-	if *templsitePath != "" {
-		absTemplsitePath, err := filepath.Abs(*templsitePath)
+	if templsitePath != "" {
+		absTemplsitePath, err := filepath.Abs(templsitePath)
 		if err != nil {
 			return fmt.Errorf("resolving templsite path: %w", err)
 		}
@@ -153,10 +161,10 @@ func New(ctx context.Context, args []string) error {
 	// Success message
 	fmt.Println()
 	fmt.Println("✓ Created new site at:", absPath)
-	fmt.Println("  Template:", *templateName)
+	fmt.Println("  Template:", templateName)
 	fmt.Println("  Module:", moduleName)
 	fmt.Println()
-	if *templsitePath == "" {
+	if templsitePath == "" {
 		fmt.Println("Note: Go module dependencies not downloaded.")
 		fmt.Println("      For local development, use: templsite new <path> --templsite-path /path/to/templsite")
 		fmt.Println("      For production, publish templsite first, then run: go mod tidy")
@@ -164,7 +172,7 @@ func New(ctx context.Context, args []string) error {
 	}
 	fmt.Println("Next steps:")
 	fmt.Printf("  cd %s\n", sitePath)
-	if *templsitePath != "" {
+	if templsitePath != "" {
 		fmt.Println("  make serve")
 	} else {
 		fmt.Println("  # Setup dependencies first, then:")

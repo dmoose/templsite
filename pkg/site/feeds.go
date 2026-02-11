@@ -101,7 +101,9 @@ func (s *Site) RSS(pages []*content.Page, title, description string) string {
 	buf.WriteString(xml.Header)
 	encoder := xml.NewEncoder(&buf)
 	encoder.Indent("", "  ")
-	_ = encoder.Encode(feed)
+	if err := encoder.Encode(feed); err != nil {
+		return ""
+	}
 
 	return buf.String()
 }
@@ -190,7 +192,9 @@ func (s *Site) Atom(pages []*content.Page, title, subtitle string) string {
 	buf.WriteString(xml.Header)
 	encoder := xml.NewEncoder(&buf)
 	encoder.Indent("", "  ")
-	_ = encoder.Encode(feed)
+	if err := encoder.Encode(feed); err != nil {
+		return ""
+	}
 
 	return buf.String()
 }
@@ -266,7 +270,9 @@ func (s *Site) JSON(pages []*content.Page, title, description string) string {
 	// Use encoding/json for proper JSON output
 	var buf bytes.Buffer
 	encoder := jsonEncoder{&buf}
-	_ = encoder.Encode(feed)
+	if err := encoder.Encode(feed); err != nil {
+		return ""
+	}
 
 	return buf.String()
 }
