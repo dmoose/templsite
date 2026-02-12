@@ -1,3 +1,6 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package site
 
 import (
@@ -142,28 +145,22 @@ init();
 	// Check homepage
 	if page, ok := pagesByURL["/"]; !ok {
 		t.Error("homepage not found")
-	} else {
-		if page.Title != "Home Page" {
-			t.Errorf("homepage title: got %q, want %q", page.Title, "Home Page")
-		}
+	} else if page.Title != "Home Page" {
+		t.Errorf("homepage title: got %q, want %q", page.Title, "Home Page")
 	}
 
 	// Check about page
 	if page, ok := pagesByURL["/about/"]; !ok {
 		t.Error("about page not found")
-	} else {
-		if page.Title != "About Us" {
-			t.Errorf("about page title: got %q, want %q", page.Title, "About Us")
-		}
+	} else if page.Title != "About Us" {
+		t.Errorf("about page title: got %q, want %q", page.Title, "About Us")
 	}
 
 	// Check blog post
 	if page, ok := pagesByURL["/blog/first-post/"]; !ok {
 		t.Error("blog post not found")
-	} else {
-		if page.Title != "First Post" {
-			t.Errorf("blog post title: got %q, want %q", page.Title, "First Post")
-		}
+	} else if page.Title != "First Post" {
+		t.Errorf("blog post title: got %q, want %q", page.Title, "First Post")
 	}
 
 	// Verify output directory exists

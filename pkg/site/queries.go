@@ -1,3 +1,6 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package site
 
 import (
@@ -88,7 +91,7 @@ func (s *Site) PageByURL(url string) *content.Page {
 		url = "/" + url
 	}
 	if !strings.HasSuffix(url, "/") && url != "/" {
-		url = url + "/"
+		url += "/"
 	}
 
 	for _, page := range s.Pages {

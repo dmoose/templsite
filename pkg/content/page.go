@@ -1,6 +1,10 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package content
 
 import (
+	"slices"
 	"time"
 )
 
@@ -128,10 +132,5 @@ func (p *Page) IsPublished() bool {
 
 // HasTag returns true if the page has the specified tag
 func (p *Page) HasTag(tag string) bool {
-	for _, t := range p.Tags {
-		if t == tag {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(p.Tags, tag)
 }

@@ -1,9 +1,13 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package templates
 
 import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"slices"
 )
 
 //go:embed tailwind tailwind/.gitignore tailwind/archetypes fastatic fastatic/.gitignore fastatic/archetypes
@@ -33,10 +37,5 @@ func ListTemplates() []string {
 // templateExists checks if a template name exists
 func templateExists(name string) bool {
 	templates := ListTemplates()
-	for _, t := range templates {
-		if t == name {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(templates, name)
 }

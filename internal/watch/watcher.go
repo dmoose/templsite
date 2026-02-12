@@ -1,3 +1,6 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package watch
 
 import (
@@ -152,8 +155,8 @@ func (w *Watcher) isRelevantFile(path string) bool {
 	base := filepath.Base(path)
 
 	// Ignore hidden files and directories (check all path components)
-	parts := strings.Split(path, string(filepath.Separator))
-	for _, part := range parts {
+	parts := strings.SplitSeq(path, string(filepath.Separator))
+	for part := range parts {
 		if strings.HasPrefix(part, ".") && part != "." && part != ".." {
 			return false
 		}

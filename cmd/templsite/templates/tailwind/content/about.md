@@ -5,7 +5,7 @@ description: "About this site"
 
 # About
 
-This site is built with [templsite](https://github.com/yourorg/templsite).
+This site is built with [templsite](https://github.com/dmoose/templsite).
 
 ## Features
 

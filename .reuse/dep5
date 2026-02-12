@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: templsite
+Upstream-Contact: https://github.com/dmoose/templsite
+Source: https://github.com/dmoose/templsite
+
+Files: *
+Copyright: 2025-2026 Catapulsion LLC and contributors
+License: MIT

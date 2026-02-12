@@ -1,3 +1,6 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package site
 
 import (
@@ -180,7 +183,7 @@ func TestOffset(t *testing.T) {
 
 func TestPaginate(t *testing.T) {
 	pages := make([]*content.Page, 25)
-	for i := 0; i < 25; i++ {
+	for i := range 25 {
 		pages[i] = &content.Page{Title: string(rune('A' + i))}
 	}
 

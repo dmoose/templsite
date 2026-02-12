@@ -1,3 +1,6 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package assets
 
 import (
@@ -306,8 +309,8 @@ func TestProcessJSDirectoryWithContextCancellation(t *testing.T) {
 		t.Fatalf("failed to create input dir: %v", err)
 	}
 
-	for i := 0; i < 5; i++ {
-		jsFile := filepath.Join(inputDir, filepath.Join("file"+string(rune('0'+i))+".js"))
+	for i := range 5 {
+		jsFile := filepath.Join(inputDir, "file"+string(rune('0'+i))+".js")
 		if err := os.WriteFile(jsFile, []byte("console.log('test');"), 0644); err != nil {
 			t.Fatalf("failed to write JS file: %v", err)
 		}

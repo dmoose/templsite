@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: ['1.25']
+        go-version: ['1.26']
     steps:
       - uses: actions/checkout@v4
 
@@ -40,7 +40,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
+          go-version: '1.26'
 
       - name: Install templ
         run: go install github.com/a-h/templ/cmd/templ@latest
@@ -48,13 +48,27 @@ jobs:
       - name: Generate templ components
         run: templ generate
 
-      - name: Run go vet
-        run: go vet ./...
+      - name: Lint
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: latest
 
-      - name: Check formatting
+      - name: Check go fix
         run: |
-          if [ -n "$(gofmt -l .)" ]; then
-            echo "The following files are not formatted:"
-            gofmt -l .
+          go fix ./...
+          if [ -n "$(git diff)" ]; then
+            echo "go fix produced changes -- run 'go fix ./...' locally"
+            git diff
             exit 1
           fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install REUSE tool
+        run: pip install reuse
+
+      - name: Check REUSE compliance
+        run: reuse lint

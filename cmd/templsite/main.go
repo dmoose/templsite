@@ -1,3 +1,6 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package main
 
 import (
@@ -33,9 +36,7 @@ func main() {
 	defer cancel()
 
 	root := newRootCmd(ctx)
-	if err := root.Execute(); err != nil {
-		os.Exit(1)
-	}
+	_ = root.Execute()
 }
 
 func newRootCmd(ctx context.Context) *cobra.Command {

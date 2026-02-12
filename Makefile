@@ -1,4 +1,4 @@
-.PHONY: help build test clean install dev setup deps setup-tailwind generate
+.PHONY: help build test clean install dev setup deps setup-tailwind generate lint fmt fix
 
 GOCMD=go
 GOBUILD=$(GOCMD) build
@@ -128,7 +128,7 @@ example: build setup-tailwind ## Create and serve example site
 	@echo "Starting example site..."
 	@cd example && ../$(BINARY_PATH) serve
 
-lint: ## Run linters
+lint: ## Run linters (includes vet + formatting checks)
 	@echo "Running linters..."
 	@command -v golangci-lint >/dev/null 2>&1 || { echo "golangci-lint not installed. Install from: https://golangci-lint.run/welcome/install/"; exit 1; }
 	golangci-lint run ./...
@@ -138,10 +138,10 @@ fmt: ## Format code
 	$(GOCMD) fmt ./...
 	@echo "✓ Code formatted"
 
-vet: ## Run go vet
-	@echo "Running go vet..."
-	$(GOCMD) vet ./...
-	@echo "✓ Vet complete"
+fix: ## Apply go fix modernizations
+	@echo "Running go fix..."
+	$(GOCMD) fix ./...
+	@echo "✓ Fixes applied"
 
 mod-update: ## Update Go dependencies
 	@echo "Updating dependencies..."

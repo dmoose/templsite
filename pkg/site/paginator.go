@@ -1,3 +1,6 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package site
 
 import (
@@ -31,7 +34,7 @@ func NewPaginator(pages []*content.Page, perPage int, baseURL string) *Paginator
 
 	// Ensure baseURL ends with slash
 	if !strings.HasSuffix(baseURL, "/") {
-		baseURL = baseURL + "/"
+		baseURL += "/"
 	}
 
 	total := len(pages)

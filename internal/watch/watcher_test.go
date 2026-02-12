@@ -1,3 +1,6 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package watch
 
 import (
@@ -116,7 +119,7 @@ func TestWatcherDebouncing(t *testing.T) {
 
 	// Create multiple files quickly
 	testFile := filepath.Join(tmpDir, "test.md")
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		_ = os.WriteFile(testFile, []byte("content"), 0644)
 		time.Sleep(10 * time.Millisecond)
 	}

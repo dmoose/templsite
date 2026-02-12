@@ -1,3 +1,6 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package site
 
 import (
@@ -119,10 +122,10 @@ func TestTaxonomyAllTerms(t *testing.T) {
 	tax := NewTaxonomy("tags")
 
 	// Add pages with different counts
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		tax.AddPage("popular", &content.Page{Title: "P"})
 	}
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		tax.AddPage("medium", &content.Page{Title: "M"})
 	}
 	tax.AddPage("rare", &content.Page{Title: "R"})

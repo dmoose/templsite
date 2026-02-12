@@ -1,0 +1,42 @@
+name: Feature request
+description: Propose an improvement or new capability for templsite.
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share the problem first, then the proposed solution.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What workflow is currently hard or impossible?
+      placeholder: I am trying to ... but ...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe behavior, API/CLI shape, and expected output.
+      placeholder: Add a command/flag/API that ...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds or competing approaches?
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and impact
+      description: Which users are helped? Any tradeoffs or risks?
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched existing issues and discussions before filing this.
+          required: true

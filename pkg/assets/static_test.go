@@ -1,3 +1,6 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package assets
 
 import (
@@ -155,8 +158,8 @@ func TestCopyStaticWithContextCancellation(t *testing.T) {
 		t.Fatalf("failed to create images dir: %v", err)
 	}
 
-	for i := 0; i < 5; i++ {
-		imageFile := filepath.Join(imagesDir, filepath.Join("image"+string(rune('0'+i))+".png"))
+	for i := range 5 {
+		imageFile := filepath.Join(imagesDir, "image"+string(rune('0'+i))+".png")
 		if err := os.WriteFile(imageFile, []byte("fake image"), 0644); err != nil {
 			t.Fatalf("failed to write image file: %v", err)
 		}

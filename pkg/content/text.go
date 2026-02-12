@@ -1,3 +1,6 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package content
 
 import (
@@ -60,8 +63,8 @@ func ExtractSummary(markdown, html string, maxWords int) string {
 	var raw string
 
 	// Check for <!--more--> marker in markdown
-	if idx := strings.Index(markdown, moreMarker); idx != -1 {
-		raw = extractBeforeMore(cleaned, markdown[:idx])
+	if before, _, ok := strings.Cut(markdown, moreMarker); ok {
+		raw = extractBeforeMore(cleaned, before)
 	} else if first := extractFirstParagraph(cleaned); first != "" {
 		raw = first
 	} else {
@@ -199,11 +202,12 @@ func mapPlainPosToHTML(html string, plainPos int) int {
 	inTag := false
 
 	for i := 0; i < len(html); i++ {
-		if html[i] == '<' {
+		switch {
+		case html[i] == '<':
 			inTag = true
-		} else if html[i] == '>' {
+		case html[i] == '>':
 			inTag = false
-		} else if !inTag {
+		case !inTag:
 			plainCount++
 			if plainCount >= plainPos {
 				return i + 1
@@ -220,10 +224,7 @@ func findBreakPoint(html string, pos int) int {
 	}
 
 	// Look for sentence end within next 50 chars
-	searchEnd := pos + 50
-	if searchEnd > len(html) {
-		searchEnd = len(html)
-	}
+	searchEnd := min(pos+50, len(html))
 
 	for i := pos; i < searchEnd; i++ {
 		c := html[i]

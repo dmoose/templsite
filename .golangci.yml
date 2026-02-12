@@ -1,0 +1,19 @@
+version: "2"
+
+run:
+  go: "1.26"
+
+linters:
+  enable:
+    - gocritic
+    - unconvert
+    - usestdlibvars
+    - copyloopvar
+  exclusions:
+    paths:
+      - cmd/templsite/templates/fastatic
+      - cmd/templsite/templates/tailwind
+
+formatters:
+  enable:
+    - gofmt

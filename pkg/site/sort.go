@@ -1,3 +1,6 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package site
 
 import (
@@ -98,10 +101,7 @@ func Paginate(pages []*content.Page, pageNum, perPage int) []*content.Page {
 		return nil
 	}
 
-	end := start + perPage
-	if end > len(pages) {
-		end = len(pages)
-	}
+	end := min(start+perPage, len(pages))
 
 	return pages[start:end]
 }

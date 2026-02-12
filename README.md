@@ -1,10 +1,29 @@
 # templsite
 
 [![Go](https://github.com/dmoose/templsite/actions/workflows/ci.yml/badge.svg)](https://github.com/dmoose/templsite/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/dmoose/templsite?sort=semver)](https://github.com/dmoose/templsite/releases)
+[![Go Reference](https://pkg.go.dev/badge/github.com/dmoose/templsite.svg)](https://pkg.go.dev/github.com/dmoose/templsite)
 [![Go Report Card](https://goreportcard.com/badge/github.com/dmoose/templsite)](https://goreportcard.com/report/github.com/dmoose/templsite)
+[![REUSE status](https://api.reuse.software/badge/github.com/dmoose/templsite)](https://api.reuse.software/info/github.com/dmoose/templsite)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A static site generator built with Go and [templ](https://templ.guide/) components. Zero Node.js dependencies, type-safe templates, modern CSS with Tailwind v4.
+## At a Glance
+
+- **`templsite` CLI** scaffolds new sites (`templsite new`).
+- **Your site binary** (`./site`) owns rendering using your components.
+- **`templsite` library** (`pkg/*`) provides parsing, assets, and dev server primitives.
+
+## Is this for me?
+
+**Great fit if you want:**
+- Compile-time template safety with Go + templ
+- No Node.js dependency chain for the core pipeline
+- Full ownership of components and rendering logic
+
+**Probably not ideal if you want:**
+- A single precompiled universal SSG binary with runtime theme/template loading
+- A no-Go workflow where templates are edited without compiling
 
 ## Why templsite?
 
@@ -13,6 +32,20 @@ A static site generator built with Go and [templ](https://templ.guide/) componen
 - **Full customization** — Each site compiles its own binary with its own components. No theme layer to fight with.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the design rationale.
+
+## 60-Second Install & Run
+
+```bash
+# Install the CLI
+go install github.com/dmoose/templsite/cmd/templsite@latest
+
+# Scaffold and run a new site
+templsite new mysite --template tailwind
+cd mysite
+make serve
+```
+
+If you are testing unreleased changes, use `@main` instead of `@latest`.
 
 ## Quick Start
 

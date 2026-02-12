@@ -1,3 +1,6 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package commands
 
 import (
@@ -10,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/template"
 
@@ -55,13 +59,7 @@ func runNew(ctx context.Context, sitePath, templateName string, verbose bool, te
 
 	// Validate template exists
 	availableTemplates := templates.ListTemplates()
-	templateValid := false
-	for _, t := range availableTemplates {
-		if t == templateName {
-			templateValid = true
-			break
-		}
-	}
+	templateValid := slices.Contains(availableTemplates, templateName)
 	if !templateValid {
 		return fmt.Errorf("unknown template %q. Available templates: %s", templateName, strings.Join(availableTemplates, ", "))
 	}

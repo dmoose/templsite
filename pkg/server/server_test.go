@@ -1,3 +1,6 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package server
 
 import (
@@ -112,8 +115,7 @@ func TestLiveReloadNotifyReload(t *testing.T) {
 	lr := NewLiveReload()
 
 	// Start the broadcast loop
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 	lr.Start(ctx)
 
 	// NotifyReload should not block
@@ -305,7 +307,7 @@ outputDir: "public"
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", tt.path, nil)
+			req := httptest.NewRequest(http.MethodGet, tt.path, nil)
 			w := httptest.NewRecorder()
 
 			srv.handleRequest(w, req)
@@ -375,7 +377,7 @@ outputDir: "public"
 	}
 
 	// Request the page
-	req := httptest.NewRequest("GET", "/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	w := httptest.NewRecorder()
 
 	srv.handleRequest(w, req)
@@ -435,7 +437,7 @@ outputDir: "public"
 		t.Fatalf("failed to create server: %v", err)
 	}
 
-	req := httptest.NewRequest("GET", "/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	w := httptest.NewRecorder()
 
 	srv.handleRequest(w, req)

@@ -1,7 +1,11 @@
+// Copyright (c) 2025-2026 Catapulsion LLC and contributors
+// SPDX-License-Identifier: MIT
+
 package site
 
 import (
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 
@@ -267,9 +271,7 @@ func mergeConfig(base, override *Config) {
 		if base.Menus == nil {
 			base.Menus = make(map[string][]MenuItemConfig)
 		}
-		for k, v := range override.Menus {
-			base.Menus[k] = v
-		}
+		maps.Copy(base.Menus, override.Menus)
 	}
 
 	// Params — key-merge
@@ -277,9 +279,7 @@ func mergeConfig(base, override *Config) {
 		if base.Params == nil {
 			base.Params = make(map[string]any)
 		}
-		for k, v := range override.Params {
-			base.Params[k] = v
-		}
+		maps.Copy(base.Params, override.Params)
 	}
 }
 
