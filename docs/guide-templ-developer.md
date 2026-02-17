@@ -348,6 +348,8 @@ Content after the `<!--more-->` marker is excluded from the auto-generated summa
 | `weight`      | int        | Manual sort order (lower = first)                    |
 | `aliases`     | []string   | Alternative URLs that redirect to this page          |
 | `layout`      | string     | Layout name (used by `renderPages` in `main.go`)     |
+| `llms`        | bool       | Set to `false` to exclude this page from llms.txt    |
+| `llms_data`   | []string   | Data file keys to include in companion `.md` files   |
 
 ### Sections
 
@@ -730,7 +732,203 @@ Place a custom `robots.txt`, `sitemap.xml`, or `feed.xml` in the `static/` direc
 
 ---
 
-## 11. Environment Configs
+## 11. LLMs.txt — LLM-Friendly Content
+
+### What is llms.txt?
+
+The [llms.txt specification](https://llmstxt.org/) is a standard for making your site's content easily consumable by large language models. When enabled, templsite generates three kinds of output:
+
+| File | Purpose |
+|------|---------|
+| `/llms.txt` | Index file listing all pages with links to their markdown companions |
+| `/llms-full.txt` | All page content inlined into a single file |
+| `/{page}/index.html.md` | Clean markdown companion file for each published page |
+
+These files are generated alongside `sitemap.xml`, `feed.xml`, and `robots.txt` during `Site.Build()`, following the same patterns.
+
+### Enabling llms.txt
+
+Add to your `config.yaml`:
+
+```yaml
+llms:
+  enabled: true
+```
+
+That's it. On the next build, templsite will auto-generate `llms.txt` and `llms-full.txt` in your output directory, plus a companion `.md` file next to every page's `index.html`.
+
+### Generated output
+
+With the minimal config above, templsite auto-derives sections from your content directory structure. For a site with this content:
+
+```
+content/
+├── about.md
+├── blog/
+│   ├── _index.md
+│   ├── first-post.md
+│   └── second-post.md
+└── docs/
+    └── getting-started.md
+```
+
+The generated `llms.txt` looks like:
+
+```markdown
+# My Site
+
+> Site description from config.yaml
+
+## Pages
+
+- [About](https://example.com/about/index.html.md): About this site
+
+## Blog
+
+- [First Post](https://example.com/blog/first-post/index.html.md): My first blog post
+- [Second Post](https://example.com/blog/second-post/index.html.md)
+
+## Docs
+
+- [Getting Started](https://example.com/docs/getting-started/index.html.md): How to get started
+```
+
+Each page link points to a companion markdown file that contains the page's clean markdown content (frontmatter stripped, title prepended if missing).
+
+The `llms-full.txt` file contains the same structure but with all page content inlined under each entry, so an LLM can consume the entire site in one request.
+
+### Companion files
+
+For every published page, a companion `.md` file is written alongside its `index.html`:
+
+| Page URL | HTML file | Companion file |
+|----------|-----------|----------------|
+| `/` | `public/index.html` | `public/index.html.md` |
+| `/about/` | `public/about/index.html` | `public/about/index.html.md` |
+| `/blog/first-post/` | `public/blog/first-post/index.html` | `public/blog/first-post/index.html.md` |
+
+### Configuration options
+
+```yaml
+llms:
+  enabled: true
+
+  # Override the blockquote description (defaults to site description)
+  description: "A Go static site generator with type-safe templ components"
+
+  # Define explicit sections instead of auto-deriving from directories
+  sections:
+    - name: "Documentation"
+      pattern: "docs"
+      priority: required
+    - name: "API Reference"
+      pattern: "api"
+      priority: required
+    - name: "Blog"
+      pattern: "blog"
+      priority: optional    # Grouped under "## Optional" in llms.txt
+
+  # Exclude entire sections from llms.txt output
+  exclude:
+    - "internal"
+    - "drafts"
+```
+
+**`description`** — Text used in the `> blockquote` at the top of `llms.txt`. Falls back to the site's `description` field if not set.
+
+**`sections`** — When specified, only matching sections appear in `llms.txt`, with the names and ordering you define. Sections with `priority: optional` are grouped under a single `## Optional` heading (per the llms.txt spec, LLMs may skip these when shorter context is needed). When omitted, sections are auto-derived from your content directory structure.
+
+**`exclude`** — Section names to exclude entirely. Pages in excluded sections won't appear in `llms.txt`, `llms-full.txt`, or get companion files.
+
+### Data-driven pages
+
+Pages that get their content from data files (projects, FAQ, services, etc.) have little or no markdown body — their companion `.md` files would be empty. The `llms_data` frontmatter field solves this by telling the companion generator to include the referenced data files.
+
+Add `llms_data` to any data-driven page's frontmatter:
+
+```yaml
+---
+title: "Projects"
+layout: projects
+llms_data:
+  - projects
+---
+```
+
+The companion file will include the page's markdown content (if any) followed by the raw YAML from `data/projects.yaml`, wrapped in a fenced code block:
+
+```markdown
+# Projects
+
+---
+
+## Data: projects
+
+\```yaml
+- title: templsite
+  description: A static site generator built with Go and templ
+  status: Active
+  tags:
+    - Go
+    - templ
+\```
+```
+
+A page can reference multiple data keys:
+
+```yaml
+---
+title: "Contact"
+layout: contact
+llms_data:
+  - contact-methods
+  - ideal-clients
+---
+```
+
+Data referenced via `llms_data` is also inlined in `llms-full.txt`, so LLMs consuming the full context file get complete data-driven page content.
+
+LLMs are excellent at reading structured YAML, so no format conversion is needed — the data is included as-is from your data files.
+
+### Per-page exclusion
+
+Add `llms: false` to a page's frontmatter to exclude it from all llms.txt output:
+
+```yaml
+---
+title: "Internal Notes"
+llms: false
+---
+```
+
+### Regeneration behavior
+
+Unlike `robots.txt` and `sitemap.xml` (which are skipped if already present to allow `static/` overrides), llms files are **always regenerated** on every build. This ensures they stay current when content changes without requiring `make clean`.
+
+### Programmatic access
+
+In your `renderPages` function, you can access the llms.txt data for custom rendering:
+
+```go
+// Get all pages that would appear in llms.txt
+pages := s.LLMsPages()
+
+// Get section names used in llms.txt output
+sectionNames := s.LLMsSectionNames()
+
+// Generate llms.txt content as a string
+llmsTxt := s.LLMsTxt()
+
+// Generate llms-full.txt content as a string
+llmsFull := s.LLMsFull()
+
+// Get clean markdown for a specific page
+md := site.CompanionMarkdown(page)
+```
+
+---
+
+## 12. Environment Configs
 
 ### The --env flag
 
@@ -794,7 +992,7 @@ When `--env production` is used, `config.production.yaml` is loaded and merged o
 
 ---
 
-## 12. Dev Server and Live Reload
+## 13. Dev Server and Live Reload
 
 ### Starting the dev server
 
@@ -830,7 +1028,7 @@ PORT=3000 ./site serve
 
 ---
 
-## 13. Deployment
+## 14. Deployment
 
 ### Static hosting
 
@@ -879,7 +1077,7 @@ CMD ["site", "serve"]
 
 ---
 
-## 14. Contributing to templsite
+## 15. Contributing to templsite
 
 ### Code style
 
@@ -982,7 +1180,7 @@ templsite/
 
 ---
 
-## 15. Key Dependencies
+## 16. Key Dependencies
 
 | Dependency                       | Purpose                                      |
 |----------------------------------|----------------------------------------------|

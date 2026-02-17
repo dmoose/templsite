@@ -95,6 +95,7 @@ mysite/
 - **Environment configs** — `--env` flag with config overlay files
 - **Content scaffolding** — Archetypes for `./site new posts/my-post`
 - **Syntax highlighting** — Code blocks highlighted with Chroma
+- **LLMs.txt** — Auto-generated [llms.txt](https://llmstxt.org/) with companion markdown files for LLM consumption
 
 ## Commands
 
@@ -135,6 +136,9 @@ menus:
 build:
   drafts: false
   future: false
+
+llms:
+  enabled: true
 ```
 
 For environment overrides, create `config.production.yaml` with only the fields that change.
@@ -207,7 +211,7 @@ Basic Go helps, but you can get started by editing Markdown content, customizing
 
 ## Requirements
 
-- Go 1.25+
+- Go 1.26+
 - [templ](https://templ.guide/) CLI
 
 ## License

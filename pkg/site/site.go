@@ -105,13 +105,14 @@ func (s *Site) Build(ctx context.Context) error {
 	// Compute asset version hash for cache-busting
 	s.computeAssetVersion()
 
-	// Copy static files to output root (favicons, etc.)
+	// Write auto-generated files (robots.txt, sitemap.xml, site.webmanifest, feed.xml, llms.txt)
+	s.writeGeneratedFiles()
+
+	// Copy static files to output root AFTER generated files, so user
+	// overrides (e.g., a custom robots.txt in static/) take precedence.
 	if err := s.copyStaticFiles(); err != nil {
 		return fmt.Errorf("copying static files: %w", err)
 	}
-
-	// Write auto-generated files (robots.txt, sitemap.xml, site.webmanifest, feed.xml)
-	s.writeGeneratedFiles()
 
 	elapsed := time.Since(s.BuildTime)
 	slog.Info("build complete", "duration", elapsed)
@@ -489,9 +490,10 @@ func (s *Site) computeAssetVersion() {
 	slog.Debug("asset version computed", "version", s.AssetVersion)
 }
 
-// writeGeneratedFiles writes robots.txt, sitemap.xml, site.webmanifest, and feed.xml
-// to the output directory, but only if the file doesn't already exist
-// (user can override via static/).
+// writeGeneratedFiles writes robots.txt, sitemap.xml, site.webmanifest, feed.xml,
+// and 404.html to the output directory. Files are always regenerated to reflect
+// current content. User overrides via static/ are applied afterward by
+// copyStaticFiles(), which runs after this method in the build pipeline.
 func (s *Site) writeGeneratedFiles() {
 	outputDir := s.OutputDir()
 
@@ -501,12 +503,8 @@ func (s *Site) writeGeneratedFiles() {
 		return
 	}
 
-	writeIfMissing := func(name, content string) {
+	writeFile := func(name, content string) {
 		path := filepath.Join(outputDir, name)
-		if _, err := os.Stat(path); err == nil {
-			slog.Debug("skipping generated file (already exists)", "file", name)
-			return
-		}
 		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 			slog.Warn("failed to write generated file", "file", name, "error", err)
 			return
@@ -514,11 +512,16 @@ func (s *Site) writeGeneratedFiles() {
 		slog.Debug("generated file written", "file", name)
 	}
 
-	writeIfMissing("robots.txt", s.RobotsTxt())
-	writeIfMissing("sitemap.xml", s.Sitemap())
-	writeIfMissing("site.webmanifest", s.Manifest())
-	writeIfMissing("feed.xml", s.Feed())
-	writeIfMissing("404.html", s.Default404())
+	writeFile("robots.txt", s.RobotsTxt())
+	writeFile("sitemap.xml", s.Sitemap())
+	writeFile("site.webmanifest", s.Manifest())
+	writeFile("feed.xml", s.Feed())
+	writeFile("404.html", s.Default404())
+
+	// Generate llms.txt files if enabled
+	if s.Config.LLMs.Enabled {
+		s.writeLLMsFiles()
+	}
 }
 
 // GenerateTemplComponents runs templ generate on the components directory

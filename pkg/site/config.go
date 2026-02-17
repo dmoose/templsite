@@ -46,6 +46,9 @@ type Config struct {
 	// Params holds arbitrary user-defined parameters accessible in templates
 	// via s.Config.Params["key"]. Environment overrides merge into this map.
 	Params map[string]any `yaml:"params,omitempty"`
+
+	// LLMs configures llms.txt generation for LLM-friendly content discovery
+	LLMs LLMsConfig `yaml:"llms,omitempty"`
 }
 
 // MenuItemConfig represents a menu item in configuration
@@ -71,6 +74,32 @@ type HighlightConfig struct {
 	Style string `yaml:"style,omitempty"`
 	// LineNumbers adds line numbers to code blocks when true
 	LineNumbers bool `yaml:"lineNumbers,omitempty"`
+}
+
+// LLMsConfig configures llms.txt generation for LLM-friendly content discovery.
+// When Enabled is true, the build generates llms.txt, llms-full.txt, and
+// companion .md files alongside each HTML page.
+type LLMsConfig struct {
+	// Enabled turns on llms.txt generation
+	Enabled bool `yaml:"enabled"`
+	// Description overrides the site description in the llms.txt blockquote
+	Description string `yaml:"description,omitempty"`
+	// Sections defines explicit content sections for llms.txt.
+	// If empty, sections are auto-derived from the site's directory structure.
+	Sections []LLMsSectionConfig `yaml:"sections,omitempty"`
+	// Exclude lists section patterns to exclude from llms.txt (e.g., "internal")
+	Exclude []string `yaml:"exclude,omitempty"`
+}
+
+// LLMsSectionConfig defines a section in the llms.txt output.
+type LLMsSectionConfig struct {
+	// Name is the display name for the section heading
+	Name string `yaml:"name"`
+	// Pattern is the section name (content directory) to match
+	Pattern string `yaml:"pattern"`
+	// Priority is "required" (default) or "optional".
+	// Optional sections are grouped under "## Optional" in the output.
+	Priority string `yaml:"priority,omitempty"`
 }
 
 // ContentConfig configures content processing
@@ -280,6 +309,20 @@ func mergeConfig(base, override *Config) {
 			base.Params = make(map[string]any)
 		}
 		maps.Copy(base.Params, override.Params)
+	}
+
+	// LLMs config
+	if override.LLMs.Enabled {
+		base.LLMs.Enabled = true
+	}
+	if override.LLMs.Description != "" {
+		base.LLMs.Description = override.LLMs.Description
+	}
+	if len(override.LLMs.Sections) > 0 {
+		base.LLMs.Sections = override.LLMs.Sections
+	}
+	if len(override.LLMs.Exclude) > 0 {
+		base.LLMs.Exclude = override.LLMs.Exclude
 	}
 }
 
