@@ -4,6 +4,9 @@
 package layout
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/dmoose/templsite/pkg/content"
 	"github.com/dmoose/templsite/pkg/site"
 )
@@ -33,4 +36,27 @@ func pageTitle(page *content.Page, s *site.Site) string {
 		return s.Config.Title + " — " + s.Config.Description
 	}
 	return page.Title + " — " + s.Config.Title
+}
+
+// paramString reads a value from site config params by key.
+func paramString(s *site.Site, key string) string {
+	if v, ok := s.Config.Params[key]; ok {
+		return fmt.Sprintf("%v", v)
+	}
+	return ""
+}
+
+// fmString reads a dot-separated path from page frontmatter.
+func fmString(page *content.Page, path string) string {
+	parts := strings.Split(path, ".")
+	var current any = page.Frontmatter
+	for _, key := range parts {
+		m, ok := current.(map[string]any)
+		if !ok {
+			return ""
+		}
+		current = m[key]
+	}
+	s, _ := current.(string)
+	return s
 }
