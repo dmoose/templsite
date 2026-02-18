@@ -4,6 +4,7 @@
 package content
 
 import (
+	"html"
 	"regexp"
 	"strings"
 )
@@ -25,10 +26,13 @@ var footnoteRefRegex = regexp.MustCompile(`<sup[^>]*>.*?</sup>`)
 // closeTagRegex matches opening and closing HTML tags
 var closeTagRegex = regexp.MustCompile(`<(/?)(\w+)[^>]*>`)
 
-// StripHTML removes HTML tags from a string
-func StripHTML(html string) string {
+// StripHTML removes HTML tags from a string and decodes HTML entities
+// to their plain-text equivalents (e.g. &ldquo; → ", &amp; → &).
+func StripHTML(s string) string {
 	// Remove HTML tags
-	text := stripHTMLRegex.ReplaceAllString(html, " ")
+	text := stripHTMLRegex.ReplaceAllString(s, " ")
+	// Decode HTML entities to plain text
+	text = html.UnescapeString(text)
 	// Normalize whitespace
 	text = whitespaceRegex.ReplaceAllString(text, " ")
 	return strings.TrimSpace(text)
