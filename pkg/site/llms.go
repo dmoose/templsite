@@ -161,12 +161,12 @@ func (s *Site) writeLLMsFullConfigured(b *strings.Builder, baseURL string) {
 		b.WriteString("## ")
 		b.WriteString(sec.Name)
 		b.WriteString("\n\n")
-		s.writePageContents(b,pages, baseURL)
+		s.writePageContents(b, pages, baseURL)
 	}
 
 	if len(optionalPages) > 0 {
 		b.WriteString("## Optional\n\n")
-		s.writePageContents(b,optionalPages, baseURL)
+		s.writePageContents(b, optionalPages, baseURL)
 	}
 }
 
@@ -179,7 +179,7 @@ func (s *Site) writeLLMsFullAuto(b *strings.Builder, baseURL string) {
 	rootPages := s.llmsFilteredPages(s.RegularPagesInSection("_root"))
 	if len(rootPages) > 0 {
 		b.WriteString("## Pages\n\n")
-		s.writePageContents(b,rootPages, baseURL)
+		s.writePageContents(b, rootPages, baseURL)
 	}
 
 	for _, section := range sections {
@@ -194,7 +194,7 @@ func (s *Site) writeLLMsFullAuto(b *strings.Builder, baseURL string) {
 		b.WriteString("## ")
 		b.WriteString(section.Title)
 		b.WriteString("\n\n")
-		s.writePageContents(b,pages, baseURL)
+		s.writePageContents(b, pages, baseURL)
 	}
 }
 
@@ -411,7 +411,7 @@ func (s *Site) writePageContents(b *strings.Builder, pages []*content.Page, base
 		b.WriteString("### ")
 		b.WriteString(p.Title)
 		b.WriteString("\n\n")
-		b.WriteString(fmt.Sprintf("Source: [%s](%s)\n\n", companionURL, companionURL))
+		fmt.Fprintf(b, "Source: [%s](%s)\n\n", companionURL, companionURL)
 		raw := strings.TrimSpace(p.RawContent)
 		if raw != "" {
 			b.WriteString(raw)
