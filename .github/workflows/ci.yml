@@ -24,7 +24,7 @@ jobs:
         run: go install github.com/a-h/templ/cmd/templ@latest
 
       - name: Generate templ components
-        run: templ generate
+        run: templ generate -path ./components
 
       - name: Build
         run: go build ./...
@@ -46,7 +46,7 @@ jobs:
         run: go install github.com/a-h/templ/cmd/templ@latest
 
       - name: Generate templ components
-        run: templ generate
+        run: templ generate -path ./components
 
       - name: Lint
         uses: golangci/golangci-lint-action@v7
