@@ -6,12 +6,21 @@ package commands
 import (
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 )
 
+func requireTailwindCSS(t *testing.T) {
+	t.Helper()
+	if _, err := exec.LookPath("tailwindcss"); err != nil {
+		t.Skip("tailwindcss CLI not available")
+	}
+}
+
 func TestBuildCommand(t *testing.T) {
+	requireTailwindCSS(t)
 	tmpDir := t.TempDir()
 
 	// Create test site structure
@@ -88,6 +97,7 @@ title: "Test Page"
 }
 
 func TestBuildCommandWithFlags(t *testing.T) {
+	requireTailwindCSS(t)
 	tmpDir := t.TempDir()
 
 	// Create minimal site
@@ -146,6 +156,7 @@ title: "Page"
 }
 
 func TestBuildCommandWithOutputOverride(t *testing.T) {
+	requireTailwindCSS(t)
 	tmpDir := t.TempDir()
 
 	// Create minimal site
@@ -210,6 +221,7 @@ title: "Page"
 }
 
 func TestBuildCommandWithClean(t *testing.T) {
+	requireTailwindCSS(t)
 	tmpDir := t.TempDir()
 
 	// Create minimal site
@@ -304,6 +316,7 @@ func TestBuildCommandMissingConfig(t *testing.T) {
 }
 
 func TestBuildCommandWithContextCancellation(t *testing.T) {
+	requireTailwindCSS(t)
 	tmpDir := t.TempDir()
 
 	// Create minimal site

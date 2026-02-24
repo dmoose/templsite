@@ -55,7 +55,9 @@ When contributing templates, assets, snippets, icons, fonts, or images:
 - The repository license is MIT (`LICENSE`), which applies to contributions unless stated otherwise.
 - Go source files should include:
   - `// Copyright (c) 2025-2026 Catapulsion LLC and contributors`
+  <!-- REUSE-IgnoreStart -->
   - `// SPDX-License-Identifier: MIT`
+  <!-- REUSE-IgnoreEnd -->
 - Non-code files are covered by REUSE metadata in `.reuse/dep5` unless a file has a different declared license.
 - If you add third-party content, include the correct SPDX identifier and attribution for that content.
 

@@ -6,6 +6,7 @@ package site
 import (
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -14,6 +15,9 @@ import (
 )
 
 func TestIntegrationFullBuild(t *testing.T) {
+	if _, err := exec.LookPath("tailwindcss"); err != nil {
+		t.Skip("tailwindcss CLI not available")
+	}
 	tmpDir := t.TempDir()
 
 	// Create directory structure
