@@ -10,9 +10,11 @@ import (
 	"io"
 	"io/fs"
 	"log/slog"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	chromahtml "github.com/alecthomas/chroma/v2/formatters/html"
@@ -80,6 +82,8 @@ func (s *Site) SetBaseDir(dir string) {
 func (s *Site) Build(ctx context.Context) error {
 	s.BuildTime = time.Now()
 
+	warnIfLocalhostBaseURL(s.Config.BaseURL)
+
 	slog.Info("building site", "title", s.Config.Title)
 
 	// Generate templ components first
@@ -118,6 +122,26 @@ func (s *Site) Build(ctx context.Context) error {
 	slog.Info("build complete", "duration", elapsed)
 
 	return nil
+}
+
+// warnIfLocalhostBaseURL emits a prominent warning when the configured baseURL
+// points to a local development address. Generated files like llms.txt,
+// sitemap.xml, and feed.xml will contain these URLs, which is almost certainly
+// wrong for a production deploy.
+func warnIfLocalhostBaseURL(baseURL string) {
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		return
+	}
+	host := strings.ToLower(u.Hostname())
+	if host == "localhost" || host == "127.0.0.1" || host == "0.0.0.0" || host == "::1" {
+		slog.Warn("===========================================================")
+		slog.Warn("  baseURL is set to a localhost address!")
+		slog.Warn("  Generated URLs (sitemap, llms.txt, feeds) will contain:")
+		slog.Warn("    " + baseURL)
+		slog.Warn("  Set baseURL to your production domain for deploy builds.")
+		slog.Warn("===========================================================")
+	}
 }
 
 // ProcessContent processes all content files and makes them available via Pages
