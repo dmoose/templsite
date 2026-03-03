@@ -36,7 +36,9 @@ func main() {
 	defer cancel()
 
 	root := newRootCmd(ctx)
-	_ = root.Execute()
+	if err := root.Execute(); err != nil {
+		os.Exit(1)
+	}
 }
 
 func newRootCmd(ctx context.Context) *cobra.Command {
@@ -50,11 +52,22 @@ func newRootCmd(ctx context.Context) *cobra.Command {
 		Short:         "A modern static site generator built with Go and templ",
 		Long:          "templsite - A modern static site generator built with Go and templ\n\nDocumentation: https://github.com/dmoose/templsite",
 		Version:       fmt.Sprintf("%s (%s) built %s", version, c, buildTime),
-		SilenceUsage:  true,
-		SilenceErrors: true,
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cmd.Help()
+		},
 	}
 
 	root.SetVersionTemplate("templsite version {{.Version}}\n")
+
+	versionStr := root.Version
+	root.AddCommand(&cobra.Command{
+		Use:   "version",
+		Short: "Print the version of templsite",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("templsite version %s\n", versionStr)
+		},
+	})
 
 	root.AddCommand(commands.NewNewCmd(ctx))
 	root.AddCommand(commands.NewBuildCmd(ctx))
