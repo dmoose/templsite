@@ -14,7 +14,7 @@ This document provides complete context for AI agents working on the templsite p
 
 ## Project Status
 
-### Current Version: v0.4.0-stage6
+### Current Version: v0.5.0-stage7
 
 ### Completed Stages
 - ✅ Stage 1: CLI Skeleton (v0.1.0-stage1)
@@ -23,9 +23,10 @@ This document provides complete context for AI agents working on the templsite p
 - ✅ Stage 4: CSS Pipeline (v0.2.0-stage4)
 - ✅ Stage 5: JS & Static Files (v0.3.0-stage5)
 - ✅ Stage 6: Template System (v0.4.0-stage6)
+- ✅ Stage 7: Build Command (v0.5.0-stage7)
 
 ### Next Stage
-- ⏭️ Stage 7: Build Command - Complete Build Workflow
+- ⏭️ Stage 8: Development Server - Live Reload
 
 See `PLAN.md` for complete implementation roadmap.
 
@@ -359,25 +360,73 @@ Stage 6 successfully implemented templ component rendering for HTML generation.
 - pkg/site coverage: 86.1% (increased from 85.2%)
 - Integration tests verify full build pipeline works end-to-end
 
-## Stage 7 Preparation
+## Stage 7 Complete: Build Command ✅
 
-### What's Next: Build Command
-Stage 7 will implement the complete `build` command with proper CLI interface.
+### Implemented Features
+Stage 7 successfully implemented the complete build command with CLI interface.
+
+#### Completed Tasks
+1. ✅ Implemented `cmd/templsite/commands/build.go` with full functionality
+2. ✅ Command-line flags:
+   - `--config` - Specify configuration file path
+   - `--output` - Override output directory
+   - `--verbose` - Enable debug-level logging
+   - `--clean` - Clean output directory before build
+3. ✅ Progress reporting with structured logging (log/slog)
+4. ✅ Build statistics reporting:
+   - Pages rendered
+   - Assets processed
+   - Total files generated
+   - Total output size (human-readable format)
+   - Build duration
+5. ✅ Error handling with helpful messages
+6. ✅ Context cancellation support
+
+#### Key Implementation Details
+- Flag parsing with standard `flag` package
+- Structured logging levels: Info (default), Debug (--verbose)
+- Build stats collection via directory walking
+- Human-readable size formatting (B, KB, MB, GB)
+- Absolute path reporting for clarity
+- Clean success messages with summary
+
+#### Test Results
+- 7 integration tests for build command
+- Coverage: 66.0% for commands package
+- All 48 tests passing across project
+- Tests cover: basic build, flags, output override, clean, missing config, cancellation
+
+#### User Experience
+```bash
+$ templsite build
+✓ Build successful!
+  Duration: 258ms
+  Pages: 1
+  Assets: 1
+  Total files: 2
+  Total size: 6.0 KB
+  Output: /path/to/public
+```
+
+## Stage 8 Preparation
+
+### What's Next: Development Server
+Stage 8 will implement the development server with live reload functionality.
 
 #### Tasks
-1. Implement `cmd/templsite/commands/build.go`
-2. Add command-line flags (--config, --output, --verbose)
-3. Progress reporting with structured logging
-4. Error handling with helpful messages
-5. Build statistics (pages built, time elapsed)
-6. Integration with existing Site.Build() method
+1. Implement file watcher with fsnotify
+2. Create WebSocket-based live reload
+3. Implement HTTP server for static files
+4. Auto-rebuild on file changes
+5. Inject live reload script into HTML
+6. Graceful shutdown handling
 
 #### Key Considerations
-- Use context for cancellation support
-- Structured logging with log/slog
-- Clear error messages for users
-- Build time reporting
-- Verify output directory creation
+- Debounce file change events
+- Handle multiple browser connections
+- Special route for WebSocket (/_live-reload)
+- Watch content, components, assets, config
+- Rebuild only what changed (future optimization)
 
 ## Important Notes
 
@@ -392,7 +441,6 @@ Stage 7 will implement the complete `build` command with proper CLI interface.
 - Commands are stubs (new, serve, components) - will be implemented in later stages
 - No live reload yet (Stage 8)
 - No component registry yet (Stage 10)
-- Build command is stub (Stage 7)
 - Serve command is stub (Stage 8)
 - New site scaffolding not implemented (Stage 9)
 
@@ -460,6 +508,6 @@ This is an active development project. When resuming work:
 
 ---
 
-**Last Updated**: 2025-01-20  
-**Current Stage**: Stage 6 Complete (v0.4.0-stage6)  
-**Next Milestone**: Stage 7 - Build Command
+**Last Updated**: 2025-12-20  
+**Current Stage**: Stage 7 Complete (v0.5.0-stage7)  
+**Next Milestone**: Stage 8 - Development Server
