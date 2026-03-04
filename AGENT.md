@@ -14,7 +14,7 @@ This document provides complete context for AI agents working on the templsite p
 
 ## Project Status
 
-### Current Version: v0.3.0-stage5
+### Current Version: v0.4.0-stage6
 
 ### Completed Stages
 - ✅ Stage 1: CLI Skeleton (v0.1.0-stage1)
@@ -22,9 +22,10 @@ This document provides complete context for AI agents working on the templsite p
 - ✅ Stage 3: Content Parser (v0.2.0-stage3)
 - ✅ Stage 4: CSS Pipeline (v0.2.0-stage4)
 - ✅ Stage 5: JS & Static Files (v0.3.0-stage5)
+- ✅ Stage 6: Template System (v0.4.0-stage6)
 
 ### Next Stage
-- ⏭️ Stage 6: Template System - Basic Rendering
+- ⏭️ Stage 7: Build Command - Complete Build Workflow
 
 See `PLAN.md` for complete implementation roadmap.
 
@@ -41,11 +42,22 @@ templsite/
 │   │   └── components.go   # Component management (stub)
 │   └── templates/          # Embedded starter templates (TODO)
 │
+├── components/            # templ layout components
+│   ├── layout/            # Layout components
+│   │   ├── base.templ     # HTML shell (DOCTYPE, head, body)
+│   │   ├── page.templ     # Page layout with header/footer
+│   │   └── data.go        # Data types for components
+│   └── ui/                # UI components
+│       ├── header.templ   # Site header with navigation
+│       └── footer.templ   # Site footer with copyright
+│
 ├── pkg/                    # Public libraries
 │   ├── site/              # Site management
 │   │   ├── config.go      # Configuration with YAML support
 │   │   ├── site.go        # Site struct and Build() orchestration
-│   │   └── *_test.go      # Tests (82.7% coverage)
+│   │   ├── render_test.go # Rendering tests
+│   │   ├── integration_test.go # Full build integration tests
+│   │   └── *_test.go      # Tests (86.1% coverage)
 │   │
 │   ├── content/           # Content parsing
 │   │   ├── page.go        # Page struct with metadata
@@ -59,12 +71,12 @@ templsite/
 │   │   ├── static.go      # Static file copying
 │   │   └── *_test.go      # Tests (78.8% coverage)
 │   │
-│   └── components/        # Component registry (TODO)
+│   └── components/        # Component registry (TODO: Stage 10)
 │
 ├── internal/              # Internal packages
-│   ├── server/            # Development server (TODO)
-│   ├── watch/             # File watcher (TODO)
-│   └── build/             # Build orchestration (TODO)
+│   ├── server/            # Development server (TODO: Stage 8)
+│   ├── watch/             # File watcher (TODO: Stage 8)
+│   └── build/             # Build orchestration (TODO: Stage 7)
 │
 ├── assets/                # Example asset files
 │   ├── css/
@@ -250,7 +262,7 @@ func (s *Site) Build(ctx context.Context) error {
 ## Testing Strategy
 
 ### Test Coverage
-- `pkg/site`: 85.2%
+- `pkg/site`: 86.1%
 - `pkg/content`: 85.8%
 - `pkg/assets`: 78.8%
 
@@ -317,27 +329,55 @@ Detailed changes:
 3. Verify test now passes
 4. Check for similar issues in related code
 
-## Stage 6 Preparation
+## Stage 6 Complete: Template System ✅
 
-### What's Next: Template System
-Stage 6 will implement basic rendering with templ components.
+### Implemented Features
+Stage 6 successfully implemented templ component rendering for HTML generation.
+
+#### Completed Tasks
+1. ✅ Created base templ components:
+   - `components/layout/base.templ` - HTML shell (DOCTYPE, head, body)
+   - `components/layout/page.templ` - Page layout with header/footer
+   - `components/ui/header.templ` - Site header with navigation
+   - `components/ui/footer.templ` - Site footer with copyright
+2. ✅ Updated Makefile: `build` target depends on `generate`
+3. ✅ Implemented `renderPages()` - orchestrates page rendering
+4. ✅ Implemented `renderPage()` - renders individual pages
+5. ✅ Implemented `getOutputPath()` - clean URL structure
+6. ✅ Comprehensive test coverage (6 unit tests + 2 integration tests)
+
+#### Key Implementation Details
+- templ components compile to Go functions via `templ generate`
+- Generated files: `*_templ.go` (gitignored via .gitignore)
+- Components receive typed parameters (site config, page data)
+- URL structure: `/about/` → `public/about/index.html`
+- Full build pipeline: content → assets → rendering
+- All errors handled at compile time (type-safe)
+
+#### Test Results
+- 42 total tests passing
+- pkg/site coverage: 86.1% (increased from 85.2%)
+- Integration tests verify full build pipeline works end-to-end
+
+## Stage 7 Preparation
+
+### What's Next: Build Command
+Stage 7 will implement the complete `build` command with proper CLI interface.
 
 #### Tasks
-1. Install templ CLI
-2. Create base templ components:
-   - `components/layout/base.templ` - HTML shell
-   - `components/layout/page.templ` - Page layout
-   - `components/ui/header.templ` - Site header
-   - `components/ui/footer.templ` - Site footer
-3. Update Makefile with `templ generate`
-4. Implement `renderPages()` and `renderPage()` in site.go
-5. Write tests for rendering
+1. Implement `cmd/templsite/commands/build.go`
+2. Add command-line flags (--config, --output, --verbose)
+3. Progress reporting with structured logging
+4. Error handling with helpful messages
+5. Build statistics (pages built, time elapsed)
+6. Integration with existing Site.Build() method
 
 #### Key Considerations
-- templ components compile to Go functions
-- Generated files: `*_templ.go` (should be gitignored)
-- Components receive typed parameters
-- Error handling at compile time
+- Use context for cancellation support
+- Structured logging with log/slog
+- Clear error messages for users
+- Build time reporting
+- Verify output directory creation
 
 ## Important Notes
 
@@ -352,7 +392,9 @@ Stage 6 will implement basic rendering with templ components.
 - Commands are stubs (new, serve, components) - will be implemented in later stages
 - No live reload yet (Stage 8)
 - No component registry yet (Stage 10)
-- No templ rendering yet (Stage 6)
+- Build command is stub (Stage 7)
+- Serve command is stub (Stage 8)
+- New site scaffolding not implemented (Stage 9)
 
 ### Testing Philosophy
 - Tests should be fast and isolated
@@ -418,6 +460,6 @@ This is an active development project. When resuming work:
 
 ---
 
-**Last Updated**: 2025-01-19  
-**Current Stage**: Stage 5 Complete (v0.3.0-stage5)  
-**Next Milestone**: Stage 6 - Template System
+**Last Updated**: 2025-01-20  
+**Current Stage**: Stage 6 Complete (v0.4.0-stage6)  
+**Next Milestone**: Stage 7 - Build Command
