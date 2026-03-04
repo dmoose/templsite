@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"git.catapulsion.com/templsite/pkg/content"
 )
 
 func TestIntegrationFullBuild(t *testing.T) {
@@ -121,86 +123,53 @@ init();
 
 	// Build
 	ctx := context.Background()
+	// Build the site (content parsing + assets only)
 	if err := site.Build(ctx); err != nil {
-		t.Fatalf("build failed: %v", err)
+		t.Fatalf("Build failed: %v", err)
 	}
 
-	// Verify output structure
+	// Verify content was parsed
+	if len(site.Pages) != 3 {
+		t.Errorf("expected 3 pages, got %d", len(site.Pages))
+	}
+
+	// Verify page data
+	pagesByURL := make(map[string]*content.Page)
+	for _, page := range site.Pages {
+		pagesByURL[page.URL] = page
+	}
+
+	// Check homepage
+	if page, ok := pagesByURL["/"]; !ok {
+		t.Error("homepage not found")
+	} else {
+		if page.Title != "Home Page" {
+			t.Errorf("homepage title: got %q, want %q", page.Title, "Home Page")
+		}
+	}
+
+	// Check about page
+	if page, ok := pagesByURL["/about/"]; !ok {
+		t.Error("about page not found")
+	} else {
+		if page.Title != "About Us" {
+			t.Errorf("about page title: got %q, want %q", page.Title, "About Us")
+		}
+	}
+
+	// Check blog post
+	if page, ok := pagesByURL["/blog/first-post/"]; !ok {
+		t.Error("blog post not found")
+	} else {
+		if page.Title != "First Post" {
+			t.Errorf("blog post title: got %q, want %q", page.Title, "First Post")
+		}
+	}
+
+	// Verify output directory exists
 	publicDir := filepath.Join(tmpDir, "public")
-
-	// Check HTML files exist
-	htmlFiles := []struct {
-		path        string
-		mustContain []string
-	}{
-		{
-			path: filepath.Join(publicDir, "index.html"),
-			mustContain: []string{
-				"<!doctype html>",
-				"<title>Home Page</title>",
-				"Welcome to our site",
-				"Welcome",
-				"This is the home page",
-			},
-		},
-		{
-			path: filepath.Join(publicDir, "about", "index.html"),
-			mustContain: []string{
-				"<!doctype html>",
-				"<title>About Us</title>",
-				"Learn more about us",
-				"About",
-				"We build great software",
-			},
-		},
-		{
-			path: filepath.Join(publicDir, "blog", "first-post", "index.html"),
-			mustContain: []string{
-				"<!doctype html>",
-				"<title>First Post</title>",
-				"Our first blog post",
-				"First Post",
-				"This is our first blog post",
-				"January 15, 2025", // Date formatting
-			},
-		},
-	}
-
-	for _, file := range htmlFiles {
-		t.Run(file.path, func(t *testing.T) {
-			if _, err := os.Stat(file.path); os.IsNotExist(err) {
-				t.Fatalf("expected file does not exist: %s", file.path)
-			}
-
-			content, err := os.ReadFile(file.path)
-			if err != nil {
-				t.Fatalf("failed to read file: %v", err)
-			}
-
-			contentStr := string(content)
-			for _, expected := range file.mustContain {
-				if !strings.Contains(contentStr, expected) {
-					t.Errorf("file missing expected content: %q\nFile preview:\n%s",
-						expected, contentStr[:min(500, len(contentStr))])
-				}
-			}
-
-			// All pages should have CSS and JS links
-			if !strings.Contains(contentStr, "/assets/css/main.css") {
-				t.Error("missing CSS link")
-			}
-			if !strings.Contains(contentStr, "/assets/js/main.js") {
-				t.Error("missing JS link")
-			}
-
-			// All pages should have header and footer
-			if !strings.Contains(contentStr, "Test Site") {
-				t.Error("missing site title in header")
-			}
-			if !strings.Contains(contentStr, "Copyright") {
-				t.Error("missing copyright in footer")
-			}
-		})
+	if _, err := os.Stat(publicDir); os.IsNotExist(err) {
+		t.Fatal("public directory not created")
 	}
 
 	// Verify CSS was processed
@@ -212,8 +181,8 @@ init();
 		t.Logf("CSS output size: %d bytes", len(css))
 	}
 
-	// Verify JS was processed
-	jsOutput := filepath.Join(publicDir, "assets", "js", "main.js")
+	// Verify JS was processed (preserves original filename)
+	jsOutput := filepath.Join(publicDir, "assets", "js", "app.js")
 	if _, err := os.Stat(jsOutput); os.IsNotExist(err) {
 		t.Error("JS output file not created")
 	} else {
@@ -227,22 +196,21 @@ init();
 		}
 	}
 
-	// Verify proper URL structure (clean URLs with index.html)
-	expectedPaths := []string{
-		filepath.Join(publicDir, "index.html"),
-		filepath.Join(publicDir, "about", "index.html"),
-		filepath.Join(publicDir, "blog", "first-post", "index.html"),
+	// Verify assets were built (CSS and JS)
+	expectedAssets := []string{
 		filepath.Join(publicDir, "assets", "css", "main.css"),
-		filepath.Join(publicDir, "assets", "js", "main.js"),
+		filepath.Join(publicDir, "assets", "js", "app.js"),
 	}
 
-	for _, path := range expectedPaths {
+	for _, path := range expectedAssets {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
-			t.Errorf("expected path does not exist: %s", path)
+			t.Errorf("expected asset does not exist: %s", path)
 		}
 	}
 
-	t.Logf("Build created %d pages successfully", len(site.Pages))
+	// Note: HTML rendering is now the responsibility of the user's site binary,
+	// not pkg/site.Build(). This test only verifies content parsing and asset building.
+	t.Logf("Build parsed %d pages and built assets successfully", len(site.Pages))
 }
 
 func TestIntegrationBuildWithMinification(t *testing.T) {
@@ -307,8 +275,8 @@ hello();
 		t.Fatalf("build with minification failed: %v", err)
 	}
 
-	// Verify JS was minified
-	jsOutput := filepath.Join(tmpDir, "public", "assets", "js", "main.js")
+	// Verify JS was minified (preserves original filename)
+	jsOutput := filepath.Join(tmpDir, "public", "assets", "js", "app.js")
 	minified, err := os.ReadFile(jsOutput)
 	if err != nil {
 		t.Fatalf("failed to read minified js: %v", err)

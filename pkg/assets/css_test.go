@@ -27,7 +27,7 @@ func TestFindTailwindCLIWithLocalBin(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get working directory: %v", err)
 	}
-	defer os.Chdir(origWd)
+	defer func() { _ = os.Chdir(origWd) }()
 
 	// Create a temporary directory structure
 	tmpDir := t.TempDir()

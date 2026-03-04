@@ -1,13 +1,20 @@
-/* Tailwind CSS v4 with DaisyUI Plugin */
+/* Minimal Tailwind CSS v4 with DaisyUI */
 @import "tailwindcss";
 
-/* Import DaisyUI plugin (if using) */
-/* Uncomment the line below to use DaisyUI components */
-/* @plugin "daisyui"; */
+/* Enable DaisyUI component library
+   Provides: card, btn, hero, navbar, drawer, modal, badge, alert, and 30+ more components
+   Docs: https://daisyui.com/components/ */
+@plugin "daisyui";
 
-/* Custom theme variables */
+/* Custom theme variables (optional)
+   Only add these if you need custom brand colors beyond DaisyUI's 30+ built-in themes
+   DaisyUI themes: light, dark, cupcake, bumblebee, emerald, corporate, synthwave,
+   retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel,
+   fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid,
+   lemonade, night, coffee, winter, dim, nord, sunset */
 @theme {
-  /* Custom colors */
+  /* Example: Custom brand color palette
+     Use OKLCH for perceptually uniform colors */
   --color-brand-50: oklch(0.97 0.01 210);
   --color-brand-100: oklch(0.93 0.03 210);
   --color-brand-200: oklch(0.86 0.06 210);
@@ -20,82 +27,36 @@
   --color-brand-900: oklch(0.16 0.03 210);
   --color-brand-950: oklch(0.08 0.01 210);
 
-  /* Typography */
-  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  /* Optional: Custom font families */
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
 }
 
-/* Base styles */
-@layer base {
-  :root {
-    /* Set default colors */
-    --color-primary: var(--color-brand-500);
-    --color-secondary: var(--color-brand-700);
-  }
+/* IMPORTANT: Keep this file minimal!
 
-  body {
-    @apply antialiased;
-  }
+   ❌ DON'T create custom component classes like:
+      @layer components {
+        .my-card { @apply bg-white rounded-lg p-4; }
+      }
 
-  /* Heading styles */
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-bold;
-  }
+   ✅ DO use DaisyUI components directly in your templ files:
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title">Title</h2>
+          <p>Content</p>
+          <button class="btn btn-primary">Action</button>
+        </div>
+      </div>
 
-  h1 {
-    @apply text-4xl;
-  }
+   The Tailwind CLI automatically scans your templ components and generates
+   optimized CSS containing only the classes you actually use.
 
-  h2 {
-    @apply text-3xl;
-  }
+   DaisyUI provides semantic color tokens that adapt to themes:
+   - bg-base-100, bg-base-200, bg-base-300 (backgrounds)
+   - text-base-content (text color)
+   - border-base-300 (borders)
+   - btn-primary, btn-secondary, btn-accent (buttons)
 
-  h3 {
-    @apply text-2xl;
-  }
-
-  /* Link styles */
-  a {
-    @apply text-blue-600 hover:text-blue-800 transition-colors;
-  }
-
-  /* Code blocks */
-  pre {
-    @apply bg-gray-100 rounded-lg p-4 overflow-x-auto;
-  }
-
-  code {
-    @apply bg-gray-100 rounded px-1 py-0.5 text-sm font-mono;
-  }
-
-  pre code {
-    @apply bg-transparent p-0;
-  }
-}
-
-/* Custom components */
-@layer components {
-  .btn-primary {
-    @apply bg-brand-500 hover:bg-brand-600 text-white font-semibold py-2 px-4 rounded transition-colors;
-  }
-
-  .card {
-    @apply bg-white rounded-lg shadow-md p-6;
-  }
-
-  .container-custom {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
-}
-
-/* Custom utilities */
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  .text-pretty {
-    text-wrap: pretty;
-  }
-}
+   Change themes by setting data-theme on <html>:
+   <html data-theme="dark"> or <html data-theme="cupcake">
+*/

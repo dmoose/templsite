@@ -13,7 +13,7 @@ func TestNewWatcher(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create watcher: %v", err)
 	}
-	defer w.Close()
+	defer func() { _ = w.Close() }()
 
 	if w == nil {
 		t.Fatal("watcher is nil")
@@ -41,7 +41,7 @@ func TestWatcherAddRemove(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create watcher: %v", err)
 	}
-	defer w.Close()
+	defer func() { _ = w.Close() }()
 
 	tmpDir := t.TempDir()
 
@@ -63,7 +63,7 @@ func TestWatcherFileChange(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create watcher: %v", err)
 	}
-	defer w.Close()
+	defer func() { _ = w.Close() }()
 
 	// Reduce debounce delay for testing
 	w.SetDebounceDelay(50 * time.Millisecond)
@@ -100,7 +100,7 @@ func TestWatcherDebouncing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create watcher: %v", err)
 	}
-	defer w.Close()
+	defer func() { _ = w.Close() }()
 
 	// Very short debounce for testing
 	w.SetDebounceDelay(100 * time.Millisecond)
@@ -117,7 +117,7 @@ func TestWatcherDebouncing(t *testing.T) {
 	// Create multiple files quickly
 	testFile := filepath.Join(tmpDir, "test.md")
 	for i := 0; i < 5; i++ {
-		os.WriteFile(testFile, []byte("content"), 0644)
+		_ = os.WriteFile(testFile, []byte("content"), 0644)
 		time.Sleep(10 * time.Millisecond)
 	}
 
@@ -148,7 +148,7 @@ loop:
 
 func TestIsRelevantFile(t *testing.T) {
 	w, _ := New()
-	defer w.Close()
+	defer func() { _ = w.Close() }()
 
 	tests := []struct {
 		path     string
@@ -191,7 +191,7 @@ func TestWatcherContextCancellation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create watcher: %v", err)
 	}
-	defer w.Close()
+	defer func() { _ = w.Close() }()
 
 	tmpDir := t.TempDir()
 	if err := w.Add(tmpDir); err != nil {
@@ -209,7 +209,7 @@ func TestWatcherContextCancellation(t *testing.T) {
 
 	// Create a file - should not get an event
 	testFile := filepath.Join(tmpDir, "test.md")
-	os.WriteFile(testFile, []byte("test"), 0644)
+	_ = os.WriteFile(testFile, []byte("test"), 0644)
 
 	select {
 	case <-w.Events():
@@ -224,7 +224,7 @@ func TestWatcherMultipleFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create watcher: %v", err)
 	}
-	defer w.Close()
+	defer func() { _ = w.Close() }()
 
 	w.SetDebounceDelay(50 * time.Millisecond)
 
@@ -266,7 +266,7 @@ func TestSetDebounceDelay(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create watcher: %v", err)
 	}
-	defer w.Close()
+	defer func() { _ = w.Close() }()
 
 	customDelay := 500 * time.Millisecond
 	w.SetDebounceDelay(customDelay)

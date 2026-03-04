@@ -64,7 +64,7 @@ func (lr *LiveReload) removeConnection(conn *websocket.Conn) {
 	lr.mu.Lock()
 	defer lr.mu.Unlock()
 	delete(lr.connections, conn)
-	conn.Close()
+	_ = conn.Close()
 }
 
 // readLoop reads messages from the WebSocket (mainly for disconnect detection)
@@ -72,10 +72,9 @@ func (lr *LiveReload) readLoop(conn *websocket.Conn) {
 	defer lr.removeConnection(conn)
 
 	// Set read deadline
-	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	_ = conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 	conn.SetPongHandler(func(string) error {
-		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
-		return nil
+		return conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 	})
 
 	for {
@@ -161,7 +160,7 @@ func (lr *LiveReload) Close() {
 	defer lr.mu.Unlock()
 
 	for conn := range lr.connections {
-		conn.Close()
+		_ = conn.Close()
 	}
 	lr.connections = make(map[*websocket.Conn]bool)
 	close(lr.broadcast)

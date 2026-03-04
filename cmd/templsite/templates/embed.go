@@ -6,7 +6,7 @@ import (
 	"io/fs"
 )
 
-//go:embed minimal minimal/.gitignore minimal/bin
+//go:embed tailwind tailwind/.gitignore tailwind/archetypes fastatic fastatic/.gitignore fastatic/archetypes
 var Templates embed.FS
 
 // GetTemplate returns the embedded filesystem for a specific template
@@ -27,7 +27,7 @@ func GetTemplate(name string) (fs.FS, error) {
 
 // ListTemplates returns a list of available template names
 func ListTemplates() []string {
-	return []string{"minimal"}
+	return []string{"tailwind", "fastatic"}
 }
 
 // templateExists checks if a template name exists

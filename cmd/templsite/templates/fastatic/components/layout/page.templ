@@ -1,0 +1,25 @@
+package layout
+
+import (
+	"git.catapulsion.com/templsite/pkg/content"
+	"git.catapulsion.com/templsite/pkg/site"
+)
+
+templ Page(s *site.Site, page *content.Page) {
+	@Base(PageMeta{
+		Title:        page.Title + " - " + s.Config.Title,
+		Description:  page.Description,
+		SiteName:     s.Config.Title,
+		BaseURL:      s.Config.BaseURL,
+		URL:          page.URL,
+		Language:     langOrDefault(s.Config.Language),
+		ThemeColor:   s.Config.ThemeColor,
+		AssetVersion: s.AssetVersion,
+	}, pageBody(page))
+}
+
+templ pageBody(page *content.Page) {
+	<main>
+		@templ.Raw(page.Content)
+	</main>
+}

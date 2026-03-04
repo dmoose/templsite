@@ -9,10 +9,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alecthomas/chroma/v2/formatters/html"
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
-	"github.com/yuin/goldmark/renderer/html"
+	goldmarkhtml "github.com/yuin/goldmark/renderer/html"
+	"github.com/yuin/goldmark/text"
+	"github.com/yuin/goldmark/util"
+	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"gopkg.in/yaml.v3"
 )
 
@@ -22,23 +27,48 @@ type Parser struct {
 	markdown   goldmark.Markdown
 }
 
-// NewParser creates a new Parser instance
-func NewParser(contentDir string) *Parser {
-	// Configure goldmark with GitHub Flavored Markdown
+// HighlightOptions configures syntax highlighting in the parser.
+// Pass to NewParser to enable Chroma-based code highlighting.
+type HighlightOptions struct {
+	Style       string // Chroma style name (e.g. "monokai", "github")
+	LineNumbers bool   // Show line numbers in code blocks
+}
+
+// NewParser creates a new Parser instance. Pass a HighlightOptions to enable
+// syntax highlighting; omit it to disable highlighting.
+func NewParser(contentDir string, opts ...HighlightOptions) *Parser {
+	// Configure goldmark with GitHub Flavored Markdown + footnotes
+	extensions := []goldmark.Extender{
+		extension.GFM,
+		extension.Table,
+		extension.Strikethrough,
+		extension.Linkify,
+		extension.TaskList,
+		extension.Footnote,
+	}
+
+	// Add syntax highlighting if configured
+	if len(opts) > 0 && opts[0].Style != "" {
+		hl := opts[0]
+		extensions = append(extensions, highlighting.NewHighlighting(
+			highlighting.WithFormatOptions(
+				html.WithClasses(true),
+				html.WithLineNumbers(hl.LineNumbers),
+			),
+		))
+	}
+
 	md := goldmark.New(
-		goldmark.WithExtensions(
-			extension.GFM,
-			extension.Table,
-			extension.Strikethrough,
-			extension.Linkify,
-			extension.TaskList,
-		),
+		goldmark.WithExtensions(extensions...),
 		goldmark.WithParserOptions(
 			parser.WithAutoHeadingID(),
+			parser.WithASTTransformers(
+				util.Prioritized(&externalLinkTransformer{}, 500),
+			),
 		),
 		goldmark.WithRendererOptions(
-			html.WithHardWraps(),
-			html.WithXHTML(),
+			goldmarkhtml.WithHardWraps(),
+			goldmarkhtml.WithXHTML(),
 		),
 	)
 
@@ -104,16 +134,40 @@ func (p *Parser) ParseFile(ctx context.Context, path string) (*Page, error) {
 		return nil, fmt.Errorf("parsing frontmatter: %w", err)
 	}
 
+	// Store raw markdown content
+	rawContent := string(body)
+
 	// Convert Markdown to HTML
 	var buf bytes.Buffer
 	if err := p.markdown.Convert(body, &buf); err != nil {
 		return nil, fmt.Errorf("converting markdown: %w", err)
 	}
+	htmlContent := buf.String()
+
+	// Wrap h2-delimited blocks in <section> tags when frontmatter requests it.
+	// Enables CSS structural selectors (section:nth-of-type) for alternating
+	// backgrounds via the token system.
+	if getBoolDefault(frontmatter, "sections", false) {
+		htmlContent = WrapHeadingSections(htmlContent)
+	}
+
+	// Calculate text metrics
+	plainText := StripHTML(htmlContent)
+	wordCount := WordCount(plainText)
+	readingTime := ReadingTime(wordCount)
+
+	// Extract summary (uses <!--more--> marker or first paragraph)
+	summary := ExtractSummary(rawContent, htmlContent, 50)
+
+	// Generate table of contents (h2-h4 by default)
+	// "page-toc" ID enables go-components scroll-spy JS binding
+	toc := GenerateTOC(htmlContent, 2, 4, "page-toc")
 
 	// Create page
 	page := &Page{
 		Path:        path,
-		Content:     buf.String(),
+		Content:     htmlContent,
+		RawContent:  rawContent,
 		Frontmatter: frontmatter,
 		Layout:      getStringDefault(frontmatter, "layout", "page"),
 		Draft:       getBoolDefault(frontmatter, "draft", false),
@@ -122,6 +176,13 @@ func (p *Parser) ParseFile(ctx context.Context, path string) (*Page, error) {
 		Description: getStringDefault(frontmatter, "description", ""),
 		Tags:        getStringSlice(frontmatter, "tags"),
 		Author:      getStringDefault(frontmatter, "author", ""),
+		Section:     p.extractSection(path),
+		Weight:      getIntDefault(frontmatter, "weight", 0),
+		Aliases:     getStringSlice(frontmatter, "aliases"),
+		WordCount:   wordCount,
+		ReadingTime: readingTime,
+		Summary:     summary,
+		TOC:         toc,
 	}
 
 	// Parse date if present
@@ -131,8 +192,9 @@ func (p *Parser) ParseFile(ctx context.Context, path string) (*Page, error) {
 			page.Date = date
 		}
 	} else if dateTime, ok := frontmatter["date"].(time.Time); ok {
-		// YAML might parse dates directly as time.Time
-		page.Date = dateTime
+		// YAML parses bare dates (2006-01-02) as UTC midnight, but users mean
+		// local time. Normalize date-only values to local timezone.
+		page.Date = normalizeToLocal(dateTime)
 	}
 
 	return page, nil
@@ -221,23 +283,63 @@ func (p *Parser) generateURL(path string) string {
 	// Convert to forward slashes
 	rel = filepath.ToSlash(rel)
 
-	// Handle index files
-	if rel == "index" || strings.HasSuffix(rel, "/index") {
+	// Handle index files (both index.md and _index.md)
+	// _index.md is Hugo's convention for section list pages
+	isIndex := rel == "index" || rel == "_index" ||
+		strings.HasSuffix(rel, "/index") || strings.HasSuffix(rel, "/_index")
+
+	if isIndex {
+		// Remove the index filename, keeping just the directory path
+		rel = strings.TrimSuffix(rel, "_index")
 		rel = strings.TrimSuffix(rel, "index")
+		rel = strings.TrimSuffix(rel, "/") // Remove trailing slash from directory
+
 		if rel == "" {
 			return "/"
 		}
-		return "/" + rel
+		return "/" + rel + "/"
 	}
 
 	// Return with leading and trailing slash
 	return "/" + rel + "/"
 }
 
-// parseDate attempts to parse a date string in multiple formats
+// extractSection extracts the content section from a file path
+// For example, "content/blog/post.md" returns "blog"
+// Files at the root of content return empty string
+func (p *Parser) extractSection(path string) string {
+	// Get relative path from content directory
+	rel, err := filepath.Rel(p.contentDir, path)
+	if err != nil {
+		return ""
+	}
+
+	// Convert to forward slashes for consistency
+	rel = filepath.ToSlash(rel)
+
+	// Split by directory separator
+	parts := strings.Split(rel, "/")
+
+	// If there's only one part (filename), there's no section
+	if len(parts) <= 1 {
+		return ""
+	}
+
+	// First directory is the section
+	return parts[0]
+}
+
+// parseDate attempts to parse a date string in multiple formats.
+// Date-only formats are parsed in the local timezone (what the user intends
+// when writing "date: 2026-02-12"), while datetime formats preserve their zone.
 func parseDate(dateStr string) (time.Time, error) {
+	// Date-only format — parse in local timezone
+	if t, err := time.ParseInLocation("2006-01-02", dateStr, time.Local); err == nil {
+		return t, nil
+	}
+
+	// Datetime formats — preserve timezone info
 	formats := []string{
-		"2006-01-02",
 		"2006-01-02T15:04:05Z07:00",
 		"2006-01-02 15:04:05",
 		time.RFC3339,
@@ -251,4 +353,35 @@ func parseDate(dateStr string) (time.Time, error) {
 	}
 
 	return time.Time{}, fmt.Errorf("unable to parse date: %s", dateStr)
+}
+
+// normalizeToLocal converts a UTC midnight time (from YAML auto-parsing bare dates)
+// to local midnight. If the time has a non-zero hour/minute/second, it's left as-is.
+func normalizeToLocal(t time.Time) time.Time {
+	if t.Hour() == 0 && t.Minute() == 0 && t.Second() == 0 && t.Location() == time.UTC {
+		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
+	}
+	return t
+}
+
+// externalLinkTransformer adds target="_blank" and rel="noopener noreferrer"
+// to links pointing to external URLs (http:// or https://).
+type externalLinkTransformer struct{}
+
+func (t *externalLinkTransformer) Transform(node *ast.Document, reader text.Reader, pc parser.Context) {
+	_ = ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if !entering {
+			return ast.WalkContinue, nil
+		}
+		link, ok := n.(*ast.Link)
+		if !ok {
+			return ast.WalkContinue, nil
+		}
+		dest := string(link.Destination)
+		if strings.HasPrefix(dest, "http://") || strings.HasPrefix(dest, "https://") {
+			link.SetAttributeString("target", "_blank")
+			link.SetAttributeString("rel", "noopener noreferrer")
+		}
+		return ast.WalkContinue, nil
+	})
 }

@@ -100,7 +100,7 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return fmt.Errorf("opening source file: %w", err)
 	}
-	defer srcFile.Close()
+	defer func() { _ = srcFile.Close() }()
 
 	// Get source file info
 	srcInfo, err := srcFile.Stat()
@@ -118,7 +118,7 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return fmt.Errorf("creating destination file: %w", err)
 	}
-	defer dstFile.Close()
+	defer func() { _ = dstFile.Close() }()
 
 	// Copy content
 	if _, err := io.Copy(dstFile, srcFile); err != nil {

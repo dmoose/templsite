@@ -355,3 +355,169 @@ baseURL: "https://example.com"
 		t.Errorf("expected default outputDir 'public', got '%s'", config.OutputDir)
 	}
 }
+
+func TestLoadConfigWithEnv(t *testing.T) {
+	tmpDir := t.TempDir()
+	basePath := filepath.Join(tmpDir, "config.yaml")
+	envPath := filepath.Join(tmpDir, "config.production.yaml")
+
+	baseYAML := `
+title: "My Site"
+baseURL: "http://localhost:8080"
+description: "Dev description"
+content:
+  dir: "content"
+  defaultLayout: "page"
+assets:
+  inputDir: "assets"
+  outputDir: "assets"
+outputDir: "public"
+`
+	envYAML := `
+baseURL: "https://mysite.com"
+description: "Production description"
+`
+
+	if err := os.WriteFile(basePath, []byte(baseYAML), 0644); err != nil {
+		t.Fatalf("failed to write base config: %v", err)
+	}
+	if err := os.WriteFile(envPath, []byte(envYAML), 0644); err != nil {
+		t.Fatalf("failed to write env config: %v", err)
+	}
+
+	config, err := LoadConfigWithEnv(basePath, "production")
+	if err != nil {
+		t.Fatalf("LoadConfigWithEnv failed: %v", err)
+	}
+
+	// Overridden values
+	if config.BaseURL != "https://mysite.com" {
+		t.Errorf("expected baseURL 'https://mysite.com', got '%s'", config.BaseURL)
+	}
+	if config.Description != "Production description" {
+		t.Errorf("expected description 'Production description', got '%s'", config.Description)
+	}
+
+	// Preserved base values
+	if config.Title != "My Site" {
+		t.Errorf("expected title 'My Site', got '%s'", config.Title)
+	}
+	if config.OutputDir != "public" {
+		t.Errorf("expected outputDir 'public', got '%s'", config.OutputDir)
+	}
+}
+
+func TestLoadConfigWithEnvParams(t *testing.T) {
+	tmpDir := t.TempDir()
+	basePath := filepath.Join(tmpDir, "config.yaml")
+	envPath := filepath.Join(tmpDir, "config.production.yaml")
+
+	baseYAML := `
+title: "My Site"
+baseURL: "http://localhost:8080"
+content:
+  dir: "content"
+  defaultLayout: "page"
+assets:
+  inputDir: "assets"
+  outputDir: "assets"
+outputDir: "public"
+params:
+  captchaSiteKey: "test-key-123"
+  siteName: "dev"
+`
+	envYAML := `
+params:
+  captchaSiteKey: "real-key-456"
+  analyticsId: "GA-PROD"
+`
+
+	if err := os.WriteFile(basePath, []byte(baseYAML), 0644); err != nil {
+		t.Fatalf("failed to write base config: %v", err)
+	}
+	if err := os.WriteFile(envPath, []byte(envYAML), 0644); err != nil {
+		t.Fatalf("failed to write env config: %v", err)
+	}
+
+	config, err := LoadConfigWithEnv(basePath, "production")
+	if err != nil {
+		t.Fatalf("LoadConfigWithEnv failed: %v", err)
+	}
+
+	// Overridden param
+	if config.Params["captchaSiteKey"] != "real-key-456" {
+		t.Errorf("expected captchaSiteKey 'real-key-456', got '%v'", config.Params["captchaSiteKey"])
+	}
+
+	// New param from env
+	if config.Params["analyticsId"] != "GA-PROD" {
+		t.Errorf("expected analyticsId 'GA-PROD', got '%v'", config.Params["analyticsId"])
+	}
+
+	// Preserved base param
+	if config.Params["siteName"] != "dev" {
+		t.Errorf("expected siteName 'dev', got '%v'", config.Params["siteName"])
+	}
+}
+
+func TestLoadConfigWithEnvMissing(t *testing.T) {
+	tmpDir := t.TempDir()
+	basePath := filepath.Join(tmpDir, "config.yaml")
+
+	baseYAML := `
+title: "My Site"
+baseURL: "http://localhost:8080"
+content:
+  dir: "content"
+  defaultLayout: "page"
+assets:
+  inputDir: "assets"
+  outputDir: "assets"
+outputDir: "public"
+`
+
+	if err := os.WriteFile(basePath, []byte(baseYAML), 0644); err != nil {
+		t.Fatalf("failed to write base config: %v", err)
+	}
+
+	// No config.staging.yaml exists — should succeed with base config
+	config, err := LoadConfigWithEnv(basePath, "staging")
+	if err != nil {
+		t.Fatalf("LoadConfigWithEnv should not error on missing env file: %v", err)
+	}
+
+	if config.BaseURL != "http://localhost:8080" {
+		t.Errorf("expected base baseURL, got '%s'", config.BaseURL)
+	}
+}
+
+func TestLoadConfigWithEnvEmpty(t *testing.T) {
+	tmpDir := t.TempDir()
+	basePath := filepath.Join(tmpDir, "config.yaml")
+
+	baseYAML := `
+title: "My Site"
+baseURL: "http://localhost:8080"
+content:
+  dir: "content"
+  defaultLayout: "page"
+assets:
+  inputDir: "assets"
+  outputDir: "assets"
+outputDir: "public"
+`
+
+	if err := os.WriteFile(basePath, []byte(baseYAML), 0644); err != nil {
+		t.Fatalf("failed to write base config: %v", err)
+	}
+
+	// Empty env string — behaves like LoadConfig
+	config, err := LoadConfigWithEnv(basePath, "")
+	if err != nil {
+		t.Fatalf("LoadConfigWithEnv with empty env failed: %v", err)
+	}
+
+	if config.Title != "My Site" {
+		t.Errorf("expected title 'My Site', got '%s'", config.Title)
+	}
+}

@@ -219,7 +219,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	slog.Debug("request", "method", r.Method, "path", r.URL.Path)
 
 	// Get output directory
-	outputDir := s.site.Config.OutputPath(".")
+	outputDir := s.site.OutputDir()
 
 	// Construct file path
 	path := r.URL.Path
@@ -236,8 +236,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	info, err := os.Stat(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			http.NotFound(w, r)
-			slog.Debug("file not found", "path", filePath)
+			s.serve404(w, r, outputDir)
 			return
 		}
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -251,7 +250,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		if _, err := os.Stat(indexPath); err == nil {
 			filePath = indexPath
 		} else {
-			http.NotFound(w, r)
+			s.serve404(w, r, outputDir)
 			return
 		}
 	}
@@ -285,7 +284,36 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Expires", "0")
 
 	// Write response
-	w.Write(content)
+	if _, err := w.Write(content); err != nil {
+		slog.Debug("error writing response", "path", filePath, "error", err)
+	}
+}
+
+// serve404 serves the custom 404.html page if available, otherwise falls back to default
+func (s *Server) serve404(w http.ResponseWriter, r *http.Request, outputDir string) {
+	slog.Debug("file not found", "path", r.URL.Path)
+
+	// Try to serve custom 404.html
+	notFoundPath := filepath.Join(outputDir, "404.html")
+	content, err := os.ReadFile(notFoundPath)
+	if err != nil {
+		// No custom 404 page, use default
+		http.NotFound(w, r)
+		return
+	}
+
+	// Inject live reload script
+	contentStr := string(content)
+	if strings.Contains(contentStr, "</body>") {
+		contentStr = strings.Replace(contentStr, "</body>",
+			LiveReloadScript()+"\n</body>", 1)
+		content = []byte(contentStr)
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.WriteHeader(http.StatusNotFound)
+	_, _ = w.Write(content)
 }
 
 // getContentType returns the content type based on file extension

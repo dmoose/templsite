@@ -17,6 +17,7 @@ func Build(ctx context.Context, args []string) error {
 	// Parse flags
 	fs := flag.NewFlagSet("build", flag.ExitOnError)
 	configPath := fs.String("config", "config.yaml", "path to configuration file")
+	env := fs.String("env", "", "environment (loads config.<env>.yaml overrides)")
 	outputDir := fs.String("output", "", "output directory (overrides config)")
 	verbose := fs.Bool("verbose", false, "enable verbose logging")
 	clean := fs.Bool("clean", false, "clean output directory before build")
@@ -32,6 +33,7 @@ Options:
 		fmt.Fprintf(os.Stderr, `
 Examples:
   templsite build
+  templsite build --env production
   templsite build --config site.yaml
   templsite build --output dist --verbose
   templsite build --clean
@@ -61,8 +63,8 @@ Examples:
 	}
 
 	// Load site configuration
-	slog.Info("loading configuration", "path", *configPath)
-	s, err := site.New(*configPath)
+	slog.Info("loading configuration", "path", *configPath, "env", *env)
+	s, err := site.NewWithEnv(*configPath, *env)
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
@@ -141,7 +143,7 @@ func getBuildStats(s *site.Site, outputPath string) BuildStats {
 	}
 
 	// Walk output directory to count files and sizes
-	filepath.Walk(outputPath, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(outputPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil // Skip errors
 		}

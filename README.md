@@ -1,223 +1,258 @@
 # templsite
 
-A modern static site generator built with Go and templ components. Zero Node.js dependencies, type-safe templates, and modern CSS with Tailwind + DaisyUI.
+A static site generator built with Go and [templ](https://templ.guide/) components. Zero Node.js dependencies, type-safe templates, modern CSS with Tailwind v4.
 
-## Status
+## Two Paths
 
-🚀 **Stage 8 Complete** - Development server with live reload is functional!
+templsite serves two audiences with dedicated templates:
 
-Current version: **v0.6.0-stage8**
+| Template | Audience | Styling | Command |
+|----------|----------|---------|---------|
+| **tailwind** | templ developers using Tailwind CSS | Tailwind v4 utility classes | `templsite new mysite --template tailwind` |
+| **fastatic** | Sites using [go-components](https://git.catapulsion.com/go-components) | Token-based design system via fstctl | `templsite new mysite --template fastatic` |
 
-See [PLAN.md](PLAN.md) for the complete implementation roadmap and [DESIGN.md](DESIGN.md) for the architectural design.
+Both templates produce standalone Go projects where each site compiles its own binary. The `templsite` library provides content parsing, asset building, and dev server infrastructure. Your site's `main.go` does the rendering using **your** components.
 
-## Features
-
-- ✅ **Type-safe templates**: Use Go's templ components instead of error-prone template strings
-- ✅ **Zero Node.js**: Pure Go toolchain with Tailwind CSS standalone CLI
-- ✅ **Live reload**: Instant feedback during development with WebSocket-based auto-refresh
-- ✅ **Modern CSS**: Tailwind CSS v4 + DaisyUI 5 with CSS variables
-- ✅ **Build command**: Full-featured CLI with progress reporting
-- 🚧 **Component library**: Integration with templ-store (planned for Stage 10)
-
-## Installation
-
-### From source (requires Go 1.21+)
-
-```bash
-git clone https://github.com/yourorg/templsite
-cd templsite
-make setup
-make build
-```
-
-The `make setup` command will:
-- Download Go dependencies
-- Auto-detect or download Tailwind CSS CLI to `bin/`
+See [ARCHITECTURE.md](ARCHITECTURE.md) for why this design works.
 
 ## Quick Start
 
-Currently at Stage 8, you can manually create a site and use the build/serve commands:
+### Tailwind path (standalone)
 
 ```bash
-# Create site structure
-mkdir mysite && cd mysite
-mkdir -p content assets/css components/layout components/ui
+templsite new mysite --template tailwind
+cd mysite
+make serve
+```
 
-# Create config
-cat > config.yaml << EOF
-title: "My Site"
-baseURL: "http://localhost:8080"
-EOF
+### Fastatic path (go-components)
 
-# Create content
-cat > content/index.md << EOF
----
-title: "Welcome"
----
-# Hello World
-EOF
+```bash
+templsite new mysite --template fastatic
+cd mysite
+fstctl init --framework=templ --package=../go-components/dist
+fstctl add navbar hero section footer card button
+make serve
+```
 
-# Create CSS
-cat > assets/css/app.css << EOF
-@import "tailwindcss";
-EOF
+For local development of templsite itself, add `--templsite-path`:
 
-# Copy templ components from templsite/components/ directory
+```bash
+templsite new mysite --template tailwind --templsite-path /path/to/templsite
+```
 
-# Build the site
-templsite build
+## Features
 
-# Or start development server with live reload
-templsite serve
+- **Type-safe templates** - Go's templ components instead of error-prone template strings
+- **Zero Node.js** - Pure Go toolchain with Tailwind CSS standalone CLI
+- **Live reload** - WebSocket-based auto-refresh during development
+- **Modern CSS** - Tailwind CSS v4 with standalone CLI
+- **Project scaffolding** - `templsite new` creates complete Go projects from templates
+- **Component customization** - Each site compiles with its own templ components
+- **Content organization** - Sections, taxonomies (tags/categories), prev/next navigation
+- **Page enrichment** - Summary, reading time, word count, table of contents
+- **Feeds and SEO** - RSS, Atom, JSON Feed, sitemap.xml, robots.txt
+- **Pagination** - Built-in paginator with URL generation
+- **Data files** - Load YAML/JSON data for use in templates
+- **Navigation menus** - Configurable menus with active state
+- **Environment configs** - `--env` flag with config overlay files
+
+## Installation
+
+Requires Go 1.21+:
+
+```bash
+git clone https://github.com/dmoose/templsite
+cd templsite
+make setup    # Downloads deps + Tailwind CLI
+make build    # Builds the templsite binary
+```
+
+## Project Structure
+
+A site created with `templsite new mysite`:
+
+```
+mysite/
+├── main.go              # Your site's binary - renders with YOUR components
+├── go.mod               # Go module with templsite as dependency
+├── config.yaml          # Site configuration
+├── Makefile             # Build automation
+├── components/          # templ components (customize these)
+│   ├── layout/
+│   │   ├── base.templ   # HTML shell (DOCTYPE, head, body)
+│   │   └── page.templ   # Page layout
+│   └── ui/
+│       ├── header.templ # Site header
+│       └── footer.templ # Site footer
+├── content/             # Markdown files with YAML frontmatter
+├── archetypes/          # Content templates (for ./site new)
+├── assets/              # CSS, JS, images
+│   └── css/app.css      # Tailwind CSS entry point
+└── public/              # Generated output (gitignored)
 ```
 
 ## Commands
 
-### Build
-
-Build your site for production:
+### templsite CLI
 
 ```bash
-templsite build                    # Use default config.yaml
-templsite build --config site.yaml # Custom config
-templsite build --output dist      # Custom output directory
-templsite build --verbose          # Debug logging
-templsite build --clean            # Clean before building
+templsite new <path>                          # Create site (default: tailwind template)
+templsite new <path> --template fastatic      # Create site with fastatic template
+templsite new <path> --templsite-path ../templsite  # Local dev mode
+templsite help                                # Show help
+templsite version                             # Show version
 ```
 
-### Serve
-
-Start development server with live reload:
+### Site commands (in your site directory)
 
 ```bash
-templsite serve                  # Start on localhost:8080
-templsite serve --port 3000      # Custom port
-templsite serve --verbose        # Debug logging
+make serve           # Dev server with live reload (port 8080)
+make build           # Compile your site's binary
+make deploy          # Generate static files to public/
+make prod            # Production build (uses config.production.yaml)
+make restart         # Kill and restart dev server
 ```
 
-The development server will:
-- Perform an initial build
-- Watch for file changes (content, assets, components, config)
-- Automatically rebuild when files change
-- Refresh all connected browsers via WebSocket
-- Handle multiple browser connections
-
-### New (Coming in Stage 9)
+Or directly:
 
 ```bash
-# Not yet implemented
-templsite new mysite --template business
+./site serve                    # Dev server
+./site build                    # Static build
+./site build --env production   # Production build
+./site new posts/my-post        # Create content file from archetype
 ```
 
-## Development
+## Configuration
 
-### Prerequisites
+**config.yaml**:
 
-- Go 1.21+
-- Make
-- curl (for downloading Tailwind CLI)
+```yaml
+title: "My Site"
+baseURL: "https://example.com"
+description: "Site description for feeds"
+language: "en"
 
-### Setup
+content:
+  dir: "content"
+  defaultLayout: "page"
+
+assets:
+  inputDir: "assets"
+  outputDir: "assets"
+  minify: true
+  fingerprint: false
+
+outputDir: "public"
+
+taxonomies:
+  - tags
+  - categories
+
+menus:
+  main:
+    - name: Home
+      url: /
+      weight: 1
+    - name: About
+      url: /about/
+      weight: 2
+
+build:
+  drafts: false
+  future: false
+
+params:
+  author: "Your Name"
+```
+
+For environment overrides, create `config.production.yaml` with only the fields that change. See `config.example.yaml` for all available fields.
+
+## Content Authoring
+
+Markdown files in `content/` with YAML frontmatter:
+
+```markdown
+---
+title: "My Blog Post"
+date: 2025-01-15
+draft: false
+description: "A great post"
+tags: ["golang", "web"]
+categories: ["tutorials"]
+author: "Jane Doe"
+weight: 10
+---
+
+Your content here with **Markdown** formatting.
+
+<!--more-->
+
+Content after this marker is excluded from the summary.
+```
+
+### Available page fields
+
+After processing, each page has: `Title`, `Description`, `Date`, `Author`, `Content` (HTML), `Summary`, `WordCount`, `ReadingTime`, `TOC`, `Section`, `Tags`, `Prev`, `Next`, `URL`.
+
+### URL structure
+
+- `content/index.md` → `/`
+- `content/about.md` → `/about/`
+- `content/blog/post.md` → `/blog/post/`
+
+## Customizing Components
+
+Edit any file in `components/`. Example:
+
+```go
+// components/ui/header.templ
+package ui
+
+templ Header(title string, links []NavLink) {
+    <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <a class="text-xl font-bold" href="/">{title}</a>
+            <nav class="mt-2">
+                for _, link := range links {
+                    <a class="mr-4 text-blue-600 hover:underline" href={templ.URL(link.URL)}>{link.Text}</a>
+                }
+            </nav>
+        </div>
+    </header>
+}
+```
+
+Run `make serve` and changes are compiled and reloaded automatically.
+
+## Deployment
 
 ```bash
-# Download dependencies and Tailwind CLI
-make setup
-
-# Build the binary
-make build
-
-# Run tests
-make test
-
-# Generate templ components (included in make build)
-make generate
+make deploy        # Generates public/ directory
+# Upload public/ to any static host
 ```
 
-### Available Make Targets
+Compatible with Netlify, Vercel, GitHub Pages, AWS S3 + CloudFront, or any static file host.
 
-- `make help` - Show all available targets
-- `make setup` - Complete project setup (deps + Tailwind CLI)
-- `make build` - Build the binary (includes templ generation)
-- `make test` - Run tests with race detector
-- `make clean` - Clean build artifacts
-- `make install` - Install to GOPATH
-- `make generate` - Generate templ components
-- `make fmt` - Format code
-- `make vet` - Run go vet
+## Guides
 
-## Project Structure
+- [Guide: templ Developer](docs/guide-templ-developer.md) - Tailwind path, content features, contributing
+- [Guide: go-components](docs/guide-go-components.md) - Fastatic path, fstctl, token-based design
+- [Guide: LLM Authoring](docs/guide-llm-authoring.md) - For LLMs building sites with the fastatic stack
 
-```
-templsite/
-├── cmd/templsite/           # CLI application
-│   ├── main.go             # Entry point
-│   ├── commands/           # Command implementations
-│   │   ├── build.go        # ✅ Build command
-│   │   ├── serve.go        # ✅ Serve command
-│   │   ├── new.go          # 🚧 New command (Stage 9)
-│   │   └── components.go   # 🚧 Component management (Stage 10)
-│   └── templates/          # 🚧 Embedded starter templates (Stage 9)
-├── components/             # Example templ components
-│   ├── layout/            # Layout components
-│   └── ui/                # UI components
-├── pkg/                    # Public libraries
-│   ├── site/              # Site management (86.1% coverage)
-│   ├── content/           # Content parsing (85.8% coverage)
-│   ├── assets/            # Asset pipeline (78.8% coverage)
-│   └── components/        # Component registry (Stage 10)
-├── internal/              # Internal packages
-│   ├── server/            # Development server (complete)
-│   └── watch/             # File watcher (84.1% coverage)
-├── go.mod
-├── Makefile
-├── DESIGN.md              # Architecture & design philosophy
-├── PLAN.md                # Implementation plan
-└── AGENT.md               # AI agent context document
-```
+## FAQ
 
-## Documentation
+### Why does each site compile its own binary?
 
-- [DESIGN.md](DESIGN.md) - Complete architectural design and theory
-- [PLAN.md](PLAN.md) - Staged implementation plan with timeline
-- [AGENT.md](AGENT.md) - Context document for AI agents working on this project
+Templ components are Go functions compiled at build time, not runtime templates. Each site must be a Go project to allow component customization with type safety, IDE support, and compile-time validation. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
-## Implementation Progress
+### Why not Hugo?
 
-### Completed Stages (v0.6.0)
+Hugo uses runtime text templates. templsite uses compile-time Go functions via templ, giving you type safety, IDE support, and access to any Go library. Trade-off: Hugo has one universal binary; templsite requires compilation (but the Makefile makes it transparent).
 
-- ✅ **Stage 1**: CLI Skeleton - Command structure and Makefile
-- ✅ **Stage 2**: Configuration - YAML config with defaults
-- ✅ **Stage 3**: Content Parser - Markdown with frontmatter
-- ✅ **Stage 4**: CSS Pipeline - Tailwind CSS processing
-- ✅ **Stage 5**: JS & Static - Asset pipeline completion
-- ✅ **Stage 6**: Template System - templ component rendering
-- ✅ **Stage 7**: Build Command - Full CLI with stats
-- ✅ **Stage 8**: Development Server - Live reload with WebSocket
+### Do I need to know Go?
 
-### Next Stages
-
-- 🚧 **Stage 9**: New Site Command - Project scaffolding with templates
-- 🚧 **Stage 10**: Component Registry - templ-store integration
-- 🚧 **Stage 11**: Documentation & Examples
-- 🚧 **Stage 12**: Testing & Polish (v1.0.0)
-
-## Testing
-
-The project maintains high test coverage:
-
-- Overall: 56 tests passing
-- `pkg/site`: 86.1% coverage
-- `pkg/content`: 85.8% coverage
-- `pkg/assets`: 78.8% coverage
-- `internal/watch`: 84.1% coverage
-
-Run tests with:
-
-```bash
-make test                              # All tests
-go test -v ./pkg/site                 # Specific package
-go test -coverprofile=coverage.out ./... # With coverage
-```
+Basic Go knowledge helps, but you can get started by editing Markdown content, customizing templ components (HTML-like syntax), and using Tailwind utility classes. The Makefile hides most complexity.
 
 ## Key Technologies
 
@@ -225,26 +260,10 @@ go test -coverprofile=coverage.out ./... # With coverage
 - **templ** - Type-safe HTML components
 - **goldmark** - Markdown parser with GFM
 - **Tailwind CSS v4** - Modern CSS (standalone CLI)
-- **tdewolff/minify** - Pure Go minification
+- **tdewolff/minify** - Pure Go CSS/JS minification
 - **fsnotify** - File system watching
 - **gorilla/websocket** - WebSocket for live reload
 
-## Contributing
-
-This project is in active development (Stage 8 of 13 complete). The core functionality is working:
-
-- Content parsing ✅
-- Asset processing ✅
-- Page rendering ✅
-- Build command ✅
-- Development server with live reload ✅
-
-Contributions will be welcome once we reach v1.0.0 (Stage 12).
-
 ## License
 
-MIT (to be determined)
-
-## Contact
-
-For questions or issues, please see the repository's issue tracker.
+Apache License 2.0

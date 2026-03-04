@@ -45,8 +45,8 @@ const message = "test";
 		t.Fatalf("processJS failed: %v", err)
 	}
 
-	// Verify output file was created
-	outputFile := filepath.Join(outputDir, "js", "main.js")
+	// Verify output file was created (preserves original filename)
+	outputFile := filepath.Join(outputDir, "js", "app.js")
 	if _, err := os.Stat(outputFile); os.IsNotExist(err) {
 		t.Error("expected output JS file to be created")
 	}
@@ -102,8 +102,8 @@ const   message   =   "test"  ;
 		t.Fatalf("processJS with minify failed: %v", err)
 	}
 
-	// Verify output file was created
-	outputFile := filepath.Join(outputDir, "js", "main.js")
+	// Verify output file was created (preserves original filename)
+	outputFile := filepath.Join(outputDir, "js", "app.js")
 	output, err := os.ReadFile(outputFile)
 	if err != nil {
 		t.Fatalf("failed to read output file: %v", err)
@@ -145,10 +145,10 @@ func TestProcessJSSkipsWhenNoInput(t *testing.T) {
 		t.Errorf("processJS should succeed when no input file: %v", err)
 	}
 
-	// Verify no output file was created
-	outputFile := filepath.Join(outputDir, "js", "main.js")
-	if _, err := os.Stat(outputFile); !os.IsNotExist(err) {
-		t.Error("expected no output file when no input")
+	// Verify no output directory was created
+	outputJSDir := filepath.Join(outputDir, "js")
+	if _, err := os.Stat(outputJSDir); !os.IsNotExist(err) {
+		t.Error("expected no output when no input")
 	}
 }
 

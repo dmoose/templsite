@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"os"
 
-	"git.catapulsion.com/templsite/internal/server"
+	"git.catapulsion.com/templsite/pkg/server"
 	"git.catapulsion.com/templsite/pkg/site"
 )
 
@@ -16,6 +16,7 @@ func Serve(ctx context.Context, args []string) error {
 	// Parse flags
 	fs := flag.NewFlagSet("serve", flag.ExitOnError)
 	configPath := fs.String("config", "config.yaml", "path to configuration file")
+	env := fs.String("env", "", "environment (loads config.<env>.yaml overrides)")
 	port := fs.Int("port", 8080, "port to listen on")
 	addr := fs.String("addr", "", "address to bind to (default: localhost:<port>)")
 	verbose := fs.Bool("verbose", false, "enable verbose logging")
@@ -32,6 +33,7 @@ Options:
 		fmt.Fprintf(os.Stderr, `
 Examples:
   templsite serve
+  templsite serve --env staging
   templsite serve --port 3000
   templsite serve --config site.yaml --verbose
   templsite serve --addr 0.0.0.0:8080
@@ -67,14 +69,18 @@ Examples:
 	}
 
 	// Load site configuration
-	slog.Info("loading configuration", "path", *configPath)
-	s, err := site.New(*configPath)
+	slog.Info("loading configuration", "path", *configPath, "env", *env)
+	s, err := site.NewWithEnv(*configPath, *env)
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	// Create development server
-	srv, err := server.New(s, serverAddr)
+	// Create development server with noop render function
+	// (templsite serve is for existing projects that handle their own rendering)
+	noopRender := func(ctx context.Context, s *site.Site) error {
+		return nil // User's site binary handles rendering
+	}
+	srv, err := server.New(s, serverAddr, noopRender)
 	if err != nil {
 		return fmt.Errorf("failed to create server: %w", err)
 	}

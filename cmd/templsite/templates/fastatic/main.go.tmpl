@@ -1,0 +1,147 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"syscall"
+
+	"{{.ModulePath}}/components/layout"
+	"git.catapulsion.com/templsite/pkg/scaffold"
+	"git.catapulsion.com/templsite/pkg/server"
+	"git.catapulsion.com/templsite/pkg/site"
+)
+
+func main() {
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
+	if err := run(ctx); err != nil {
+		log.Fatalf("Error: %v\n", err)
+	}
+}
+
+func run(ctx context.Context) error {
+	command := "serve"
+	if len(os.Args) > 1 {
+		command = os.Args[1]
+	}
+
+	// Extract --env flag from remaining args
+	env := extractFlag(os.Args[2:], "env")
+
+	switch command {
+	case "build":
+		return buildSite(ctx, env)
+	case "serve":
+		return serveSite(ctx, env)
+	case "new":
+		if len(os.Args) < 3 {
+			return fmt.Errorf("usage: %s new <path>\n  Example: %s new posts/my-great-idea", os.Args[0], os.Args[0])
+		}
+		return newContent(os.Args[2])
+	default:
+		return fmt.Errorf("unknown command: %s\nUsage: %s [build|serve|new] [--env <environment>]", command, os.Args[0])
+	}
+}
+
+// extractFlag finds --flag value or --flag=value in args and returns the value.
+func extractFlag(args []string, name string) string {
+	for i, arg := range args {
+		if arg == "--"+name && i+1 < len(args) {
+			return args[i+1]
+		}
+		if len(arg) > len(name)+3 && arg[:len(name)+3] == "--"+name+"=" {
+			return arg[len(name)+3:]
+		}
+	}
+	return ""
+}
+
+func loadSite(env string) (*site.Site, error) {
+	return site.NewWithEnv("config.yaml", env)
+}
+
+func buildSite(ctx context.Context, env string) error {
+	s, err := loadSite(env)
+	if err != nil {
+		return fmt.Errorf("loading site: %w", err)
+	}
+
+	if err := s.Build(ctx); err != nil {
+		return fmt.Errorf("building site: %w", err)
+	}
+
+	if err := renderPages(ctx, s); err != nil {
+		return fmt.Errorf("rendering pages: %w", err)
+	}
+
+	fmt.Println("Site built successfully")
+	fmt.Printf("  Pages: %d\n", len(s.Pages))
+	fmt.Printf("  Output: %s\n", s.Config.OutputPath("."))
+	return nil
+}
+
+func serveSite(ctx context.Context, env string) error {
+	s, err := loadSite(env)
+	if err != nil {
+		return fmt.Errorf("loading site: %w", err)
+	}
+
+	srv, err := server.New(s, "localhost:8080", renderPages)
+	if err != nil {
+		return fmt.Errorf("creating server: %w", err)
+	}
+
+	fmt.Println("Development server running at http://localhost:8080")
+	fmt.Println("  Press Ctrl+C to stop")
+
+	return srv.Serve(ctx)
+}
+
+func newContent(path string) error {
+	cfg, err := site.LoadConfig("config.yaml")
+	if err != nil {
+		return fmt.Errorf("loading config: %w", err)
+	}
+
+	outputPath, err := scaffold.NewContent(scaffold.NewContentOptions{
+		ContentDir:    cfg.Content.Dir,
+		ArchetypesDir: "archetypes",
+		Path:          path,
+	})
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Created %s\n", outputPath)
+	return nil
+}
+
+func renderPages(ctx context.Context, s *site.Site) error {
+	for _, page := range s.Pages {
+		outputPath := s.GetOutputPath(page.URL)
+
+		outputDir := filepath.Dir(outputPath)
+		if err := os.MkdirAll(outputDir, 0755); err != nil {
+			return fmt.Errorf("creating output directory: %w", err)
+		}
+
+		f, err := os.Create(outputPath)
+		if err != nil {
+			return fmt.Errorf("creating output file: %w", err)
+		}
+
+		component := layout.Page(s, page)
+		if err := component.Render(ctx, f); err != nil {
+			f.Close()
+			return fmt.Errorf("rendering page %s: %w", page.Path, err)
+		}
+		f.Close()
+	}
+
+	return nil
+}

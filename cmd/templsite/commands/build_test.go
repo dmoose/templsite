@@ -56,8 +56,10 @@ title: "Test Page"
 
 	// Change to temp directory
 	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(originalDir) }()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("failed to chdir: %v", err)
+	}
 
 	// Run build command
 	ctx := context.Background()
@@ -67,36 +69,20 @@ title: "Test Page"
 		t.Fatalf("build command failed: %v", err)
 	}
 
-	// Verify output exists
+	// Verify output directory exists
 	publicDir := filepath.Join(tmpDir, "public")
 	if _, err := os.Stat(publicDir); os.IsNotExist(err) {
 		t.Fatal("public directory not created")
 	}
 
-	// Verify HTML output
-	indexPath := filepath.Join(publicDir, "index.html")
-	if _, err := os.Stat(indexPath); os.IsNotExist(err) {
-		t.Fatal("index.html not created")
-	}
-
-	html, err := os.ReadFile(indexPath)
-	if err != nil {
-		t.Fatalf("failed to read html: %v", err)
-	}
-
-	htmlStr := string(html)
-	if !strings.Contains(htmlStr, "Test Page") {
-		t.Error("HTML missing page title")
-	}
-	if !strings.Contains(htmlStr, "Test Content") {
-		t.Error("HTML missing content")
-	}
-
-	// Verify CSS output
+	// Verify assets were built (CSS)
 	cssPath := filepath.Join(publicDir, "assets", "css", "main.css")
 	if _, err := os.Stat(cssPath); os.IsNotExist(err) {
-		t.Error("CSS output not created")
+		t.Fatal("CSS not built")
 	}
+
+	// Note: HTML rendering is the responsibility of user's site binary,
+	// not the build command. Build() only does content parsing + assets.
 }
 
 func TestBuildCommandWithFlags(t *testing.T) {
@@ -105,8 +91,12 @@ func TestBuildCommandWithFlags(t *testing.T) {
 	// Create minimal site
 	contentDir := filepath.Join(tmpDir, "content")
 	assetsDir := filepath.Join(tmpDir, "assets", "css")
-	os.MkdirAll(contentDir, 0755)
-	os.MkdirAll(assetsDir, 0755)
+	if err := os.MkdirAll(contentDir, 0755); err != nil {
+		t.Fatalf("failed to create content dir: %v", err)
+	}
+	if err := os.MkdirAll(assetsDir, 0755); err != nil {
+		t.Fatalf("failed to create assets dir: %v", err)
+	}
 
 	// Config
 	configPath := filepath.Join(tmpDir, "site.yaml")
@@ -114,7 +104,9 @@ func TestBuildCommandWithFlags(t *testing.T) {
 baseURL: "http://localhost"
 outputDir: "dist"
 `
-	os.WriteFile(configPath, []byte(configContent), 0644)
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatalf("failed to write config: %v", err)
+	}
 
 	// Content
 	content := `---
@@ -122,14 +114,20 @@ title: "Page"
 ---
 # Content
 `
-	os.WriteFile(filepath.Join(contentDir, "index.md"), []byte(content), 0644)
+	if err := os.WriteFile(filepath.Join(contentDir, "index.md"), []byte(content), 0644); err != nil {
+		t.Fatalf("failed to write content: %v", err)
+	}
 
 	// CSS
-	os.WriteFile(filepath.Join(assetsDir, "app.css"), []byte("@import \"tailwindcss\";"), 0644)
+	if err := os.WriteFile(filepath.Join(assetsDir, "app.css"), []byte("@import \"tailwindcss\";"), 0644); err != nil {
+		t.Fatalf("failed to write css: %v", err)
+	}
 
 	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(originalDir) }()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("failed to chdir: %v", err)
+	}
 
 	// Test with custom config path
 	ctx := context.Background()
@@ -152,8 +150,12 @@ func TestBuildCommandWithOutputOverride(t *testing.T) {
 	// Create minimal site
 	contentDir := filepath.Join(tmpDir, "content")
 	assetsDir := filepath.Join(tmpDir, "assets", "css")
-	os.MkdirAll(contentDir, 0755)
-	os.MkdirAll(assetsDir, 0755)
+	if err := os.MkdirAll(contentDir, 0755); err != nil {
+		t.Fatalf("failed to create content dir: %v", err)
+	}
+	if err := os.MkdirAll(assetsDir, 0755); err != nil {
+		t.Fatalf("failed to create assets dir: %v", err)
+	}
 
 	// Config with public as output
 	configPath := filepath.Join(tmpDir, "config.yaml")
@@ -161,7 +163,9 @@ func TestBuildCommandWithOutputOverride(t *testing.T) {
 baseURL: "http://localhost"
 outputDir: "public"
 `
-	os.WriteFile(configPath, []byte(configContent), 0644)
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatalf("failed to write config: %v", err)
+	}
 
 	// Content
 	content := `---
@@ -169,14 +173,20 @@ title: "Page"
 ---
 # Content
 `
-	os.WriteFile(filepath.Join(contentDir, "index.md"), []byte(content), 0644)
+	if err := os.WriteFile(filepath.Join(contentDir, "index.md"), []byte(content), 0644); err != nil {
+		t.Fatalf("failed to write content: %v", err)
+	}
 
 	// CSS
-	os.WriteFile(filepath.Join(assetsDir, "app.css"), []byte("@import \"tailwindcss\";"), 0644)
+	if err := os.WriteFile(filepath.Join(assetsDir, "app.css"), []byte("@import \"tailwindcss\";"), 0644); err != nil {
+		t.Fatalf("failed to write css: %v", err)
+	}
 
 	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(originalDir) }()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("failed to chdir: %v", err)
+	}
 
 	// Build with output override
 	ctx := context.Background()
@@ -206,13 +216,21 @@ func TestBuildCommandWithClean(t *testing.T) {
 	contentDir := filepath.Join(tmpDir, "content")
 	assetsDir := filepath.Join(tmpDir, "assets", "css")
 	publicDir := filepath.Join(tmpDir, "public")
-	os.MkdirAll(contentDir, 0755)
-	os.MkdirAll(assetsDir, 0755)
-	os.MkdirAll(publicDir, 0755)
+	if err := os.MkdirAll(contentDir, 0755); err != nil {
+		t.Fatalf("failed to create content dir: %v", err)
+	}
+	if err := os.MkdirAll(assetsDir, 0755); err != nil {
+		t.Fatalf("failed to create assets dir: %v", err)
+	}
+	if err := os.MkdirAll(publicDir, 0755); err != nil {
+		t.Fatalf("failed to create public dir: %v", err)
+	}
 
 	// Create old file in public
 	oldFile := filepath.Join(publicDir, "old.html")
-	os.WriteFile(oldFile, []byte("old content"), 0644)
+	if err := os.WriteFile(oldFile, []byte("old content"), 0644); err != nil {
+		t.Fatalf("failed to write old file: %v", err)
+	}
 
 	// Config
 	configPath := filepath.Join(tmpDir, "config.yaml")
@@ -220,7 +238,9 @@ func TestBuildCommandWithClean(t *testing.T) {
 baseURL: "http://localhost"
 outputDir: "public"
 `
-	os.WriteFile(configPath, []byte(configContent), 0644)
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatalf("failed to write config: %v", err)
+	}
 
 	// Content
 	content := `---
@@ -228,14 +248,20 @@ title: "New"
 ---
 # New Content
 `
-	os.WriteFile(filepath.Join(contentDir, "index.md"), []byte(content), 0644)
+	if err := os.WriteFile(filepath.Join(contentDir, "index.md"), []byte(content), 0644); err != nil {
+		t.Fatalf("failed to write content: %v", err)
+	}
 
 	// CSS
-	os.WriteFile(filepath.Join(assetsDir, "app.css"), []byte("@import \"tailwindcss\";"), 0644)
+	if err := os.WriteFile(filepath.Join(assetsDir, "app.css"), []byte("@import \"tailwindcss\";"), 0644); err != nil {
+		t.Fatalf("failed to write css: %v", err)
+	}
 
 	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(originalDir) }()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("failed to chdir: %v", err)
+	}
 
 	// Build with clean
 	ctx := context.Background()
@@ -250,10 +276,10 @@ title: "New"
 		t.Error("old file should have been cleaned")
 	}
 
-	// Verify new file exists
-	newFile := filepath.Join(publicDir, "index.html")
-	if _, err := os.Stat(newFile); os.IsNotExist(err) {
-		t.Error("new file should exist after clean build")
+	// Verify assets were rebuilt
+	cssPath := filepath.Join(publicDir, "assets", "css", "main.css")
+	if _, err := os.Stat(cssPath); os.IsNotExist(err) {
+		t.Error("CSS should exist after clean build")
 	}
 }
 
@@ -261,8 +287,10 @@ func TestBuildCommandMissingConfig(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(originalDir) }()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("failed to chdir: %v", err)
+	}
 
 	// Try to build without config
 	ctx := context.Background()
@@ -283,26 +311,38 @@ func TestBuildCommandWithContextCancellation(t *testing.T) {
 	// Create minimal site
 	contentDir := filepath.Join(tmpDir, "content")
 	assetsDir := filepath.Join(tmpDir, "assets", "css")
-	os.MkdirAll(contentDir, 0755)
-	os.MkdirAll(assetsDir, 0755)
+	if err := os.MkdirAll(contentDir, 0755); err != nil {
+		t.Fatalf("failed to create content dir: %v", err)
+	}
+	if err := os.MkdirAll(assetsDir, 0755); err != nil {
+		t.Fatalf("failed to create assets dir: %v", err)
+	}
 
 	configPath := filepath.Join(tmpDir, "config.yaml")
 	configContent := `title: "Test"
 baseURL: "http://localhost"
 `
-	os.WriteFile(configPath, []byte(configContent), 0644)
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatalf("failed to write config: %v", err)
+	}
 
 	content := `---
 title: "Page"
 ---
 # Content
 `
-	os.WriteFile(filepath.Join(contentDir, "index.md"), []byte(content), 0644)
-	os.WriteFile(filepath.Join(assetsDir, "app.css"), []byte("@import \"tailwindcss\";"), 0644)
+	if err := os.WriteFile(filepath.Join(contentDir, "index.md"), []byte(content), 0644); err != nil {
+		t.Fatalf("failed to write content: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(assetsDir, "app.css"), []byte("@import \"tailwindcss\";"), 0644); err != nil {
+		t.Fatalf("failed to write css: %v", err)
+	}
 
 	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(originalDir) }()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("failed to chdir: %v", err)
+	}
 
 	// Cancel context immediately
 	ctx, cancel := context.WithCancel(context.Background())

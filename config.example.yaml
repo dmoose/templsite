@@ -8,6 +8,12 @@ title: "My Site"
 # In production, set this to your actual domain (e.g., "https://example.com")
 baseURL: "http://localhost:8080"
 
+# Site description - used in feeds and metadata
+description: "A new site built with templsite"
+
+# Language code (e.g., "en", "fr", "de")
+language: "en"
+
 # Content settings
 content:
   # Directory containing Markdown content files
@@ -34,5 +40,48 @@ assets:
 outputDir: "public"
 
 # Theme color preference (optional)
-# Options: "light", "dark", "auto"
+# Options: "light", "dark", "auto", or a hex color like "#3b82f6"
 themeColor: "light"
+
+# Taxonomies to build from page frontmatter
+# Each taxonomy extracts terms from pages (e.g., tags: [go, web] in frontmatter)
+taxonomies:
+  - tags
+  # - categories
+
+# Navigation menus
+menus:
+  main:
+    - name: "Home"
+      url: "/"
+      weight: 1
+    - name: "About"
+      url: "/about/"
+      weight: 2
+
+# Directory containing data files (YAML/JSON) accessible in templates
+# dataDir: "data"
+
+# Directory containing files to copy to output root (favicons, etc.)
+# staticDir: "static"
+
+# Build options
+build:
+  # Include draft pages in the build
+  drafts: false
+  # Include pages with future dates
+  future: false
+
+# Syntax highlighting for code blocks
+highlight:
+  # Chroma style name (e.g., "monokai", "github", "dracula")
+  # When set, a chroma.css file is generated in the assets output
+  # style: "github"
+  # Add line numbers to code blocks
+  lineNumbers: false
+
+# Arbitrary user-defined parameters accessible via s.Config.Params["key"]
+# Environment overrides (config.production.yaml) merge into this map
+# params:
+#   author: "Your Name"
+#   socialImage: "/images/og-image.png"
