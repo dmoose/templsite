@@ -4,9 +4,12 @@
 This document outlines the staged implementation plan for building templsite, a modern static site generator built with Go and templ components. The plan is divided into 13 stages, each with clear deliverables and time estimates.
 
 ## Current Status
-- ✓ Go module initialized (`go.mod`)
-- ✓ Git repository enabled
-- ✓ Design document present (`DESIGN.md`)
+- ✓ Stage 0: Foundation Setup (Complete)
+- ✓ Stage 1: Project Structure & Basic CLI (Complete - v0.1.0-stage1)
+- ✓ Stage 2: Site Configuration & Core Types (Complete - v0.1.0-stage2)
+- ✓ Stage 3: Content Parser (Complete - v0.2.0-stage3)
+- ✓ Stage 4: Asset Pipeline - CSS (Complete - v0.2.0-stage4)
+- ⏳ Stage 5: Asset Pipeline - JS & Static Files (Next)
 
 ---
 
@@ -21,7 +24,10 @@ This document outlines the staged implementation plan for building templsite, a 
 
 ---
 
-## Stage 1: Project Structure & Basic CLI
+## Stage 1: Project Structure & Basic CLI ✓
+**Status**: Complete  
+**Completed**: 2025-01-15  
+**Tag**: v0.1.0-stage1  
 **Duration**: Week 1  
 **Goal**: Get the basic scaffolding and CLI working
 
@@ -68,11 +74,11 @@ This document outlines the staged implementation plan for building templsite, a 
    - OS/architecture detection for Tailwind CLI
 
 ### Deliverables:
-- [ ] Directory structure created
-- [ ] Dependencies added to `go.mod`
-- [ ] `templsite --help` shows commands
-- [ ] Binary builds successfully with `make build`
-- [ ] Makefile targets work
+- ✅ Directory structure created
+- ✅ Dependencies added to `go.mod`
+- ✅ `templsite --help` shows commands
+- ✅ Binary builds successfully with `make build`
+- ✅ Makefile targets work (detects system Tailwind or downloads latest)
 
 ### Git:
 ```bash
@@ -86,7 +92,10 @@ git tag v0.1.0-stage1
 
 ---
 
-## Stage 2: Site Configuration & Core Types
+## Stage 2: Site Configuration & Core Types ✓
+**Status**: Complete  
+**Completed**: 2025-01-15  
+**Tag**: v0.1.0-stage2  
 **Duration**: Week 1  
 **Goal**: Define data structures and configuration loading
 
@@ -115,10 +124,10 @@ git tag v0.1.0-stage1
    - Test validation
 
 ### Deliverables:
-- [ ] Config loading works
-- [ ] Default values applied correctly
-- [ ] Tests passing
-- [ ] Example `config.yaml` created
+- ✅ Config loading works
+- ✅ Default values applied correctly
+- ✅ Tests passing (82.7% coverage)
+- ✅ Example `config.yaml` created
 
 ### Git:
 ```bash
@@ -130,7 +139,10 @@ git tag v0.1.0-stage2
 
 ---
 
-## Stage 3: Content Parser
+## Stage 3: Content Parser ✓
+**Status**: Complete  
+**Completed**: 2025-01-15  
+**Tag**: v0.2.0-stage3  
 **Duration**: Week 2  
 **Goal**: Parse Markdown files with frontmatter
 
@@ -162,10 +174,10 @@ git tag v0.1.0-stage2
    - Test draft handling
 
 ### Deliverables:
-- [ ] Can parse `.md` files with frontmatter
-- [ ] HTML generation works
-- [ ] URL generation correct
-- [ ] Tests passing with good coverage
+- ✅ Can parse `.md` files with frontmatter
+- ✅ HTML generation works (goldmark with GFM)
+- ✅ URL generation correct
+- ✅ Tests passing with 85.8% coverage
 
 ### Git:
 ```bash
@@ -177,7 +189,10 @@ git tag v0.2.0-stage3
 
 ---
 
-## Stage 4: Asset Pipeline - CSS
+## Stage 4: Asset Pipeline - CSS ✓
+**Status**: Complete  
+**Completed**: 2025-01-19  
+**Tag**: v0.2.0-stage4  
 **Duration**: Week 2  
 **Goal**: Process CSS with Tailwind standalone CLI
 
@@ -212,10 +227,11 @@ git tag v0.2.0-stage3
      - CSS variables example
 
 ### Deliverables:
-- [ ] `make setup` downloads Tailwind CLI successfully
-- [ ] CSS processing works (Tailwind → compiled CSS)
-- [ ] Minification flag works
-- [ ] Example CSS compiles
+- ✅ `make setup` detects system Tailwind or downloads latest
+- ✅ CSS processing works (Tailwind → compiled CSS)
+- ✅ Minification flag works
+- ✅ Example CSS created with Tailwind v4 syntax
+- ✅ Tests passing with 75.5% coverage
 
 ### Git:
 ```bash

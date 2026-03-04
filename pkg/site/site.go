@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	"git.catapulsion.com/templsite/pkg/assets"
 	"git.catapulsion.com/templsite/pkg/content"
 )
 
@@ -89,8 +90,25 @@ func (s *Site) processContent(ctx context.Context) error {
 
 // buildAssets builds all assets (Stage 4-5)
 func (s *Site) buildAssets(ctx context.Context) error {
-	// TODO: Implement in Stage 4-5
-	slog.Debug("building assets", "inputDir", s.Config.Assets.InputDir)
+	assetsInputPath := s.Config.AssetsInputPath(s.baseDir)
+	assetsOutputPath := s.Config.AssetsOutputPath(s.baseDir)
+
+	slog.Debug("building assets", "inputDir", assetsInputPath, "outputDir", assetsOutputPath)
+
+	// Create asset pipeline config
+	pipelineConfig := &assets.Config{
+		InputDir:    assetsInputPath,
+		OutputDir:   assetsOutputPath,
+		Minify:      s.Config.Assets.Minify,
+		Fingerprint: s.Config.Assets.Fingerprint,
+	}
+
+	// Create and run pipeline
+	pipeline := assets.New(pipelineConfig)
+	if err := pipeline.Build(ctx); err != nil {
+		return fmt.Errorf("building assets: %w", err)
+	}
+
 	return nil
 }
 
