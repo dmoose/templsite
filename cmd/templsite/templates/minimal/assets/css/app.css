@@ -1,0 +1,14 @@
+/* Tailwind CSS v4 with daisyUI */
+@import "tailwindcss";
+
+@source not "../../bin/tailwindcss";
+@source not "../../bin/daisyui{,*}.mjs";
+
+@plugin "../../bin/daisyui.mjs";
+
+/* That's it! Use DaisyUI component classes in your templ files.
+   Components: card, btn, hero, navbar, drawer, modal, badge, alert, etc.
+   Docs: https://daisyui.com/components/
+   
+   Change theme: <html data-theme="dark"> or data-theme="cupcake", etc.
+*/

@@ -9,7 +9,11 @@ This document outlines the staged implementation plan for building templsite, a 
 - ✓ Stage 2: Site Configuration & Core Types (Complete - v0.1.0-stage2)
 - ✓ Stage 3: Content Parser (Complete - v0.2.0-stage3)
 - ✓ Stage 4: Asset Pipeline - CSS (Complete - v0.2.0-stage4)
-- ⏳ Stage 5: Asset Pipeline - JS & Static Files (Next)
+- ✓ Stage 5: Asset Pipeline - JS & Static Files (Complete - v0.3.0-stage5)
+- ✓ Stage 6: Template System - Basic Rendering (Complete - v0.4.0-stage6)
+- ✓ Stage 7: Build Command (Complete - v0.5.0-stage7)
+- ✓ Stage 8: Development Server (Complete - v0.6.0-stage8)
+- ⏳ Stage 9: New Site Command (Next)
 
 ---
 
@@ -243,7 +247,10 @@ git tag v0.2.0-stage4
 
 ---
 
-## Stage 5: Asset Pipeline - JS & Static Files
+## Stage 5: Asset Pipeline - JS & Static Files ✓
+**Status**: Complete
+**Completed**: 2025-12-20
+**Tag**: v0.3.0-stage5
 **Duration**: Week 3  
 **Goal**: Complete asset pipeline
 
@@ -272,10 +279,10 @@ git tag v0.2.0-stage4
    - Test fingerprinting
 
 ### Deliverables:
-- [ ] JS processing works
-- [ ] Static files copied correctly
-- [ ] Full asset pipeline functional
-- [ ] Tests passing
+- ✅ JS processing works
+- ✅ Static files copied correctly
+- ✅ Full asset pipeline functional
+- ✅ Tests passing with 78.8% coverage
 
 ### Git:
 ```bash
@@ -287,7 +294,10 @@ git tag v0.3.0-stage5
 
 ---
 
-## Stage 6: Template System - Basic Rendering
+## Stage 6: Template System - Basic Rendering ✓
+**Status**: Complete
+**Completed**: 2025-12-20
+**Tag**: v0.4.0-stage6
 **Duration**: Week 3  
 **Goal**: Render pages using templ components
 
@@ -323,10 +333,10 @@ git tag v0.3.0-stage5
    - URL structure correct
 
 ### Deliverables:
-- [ ] templ components compile
-- [ ] Can render Markdown → HTML using templ
-- [ ] Output structure correct
-- [ ] Tests passing
+- ✅ templ components compile
+- ✅ Can render Markdown → HTML using templ
+- ✅ Output structure correct
+- ✅ Tests passing with 86.1% coverage in pkg/site
 
 ### Git:
 ```bash
@@ -338,7 +348,10 @@ git tag v0.4.0-stage6
 
 ---
 
-## Stage 7: Build Command
+## Stage 7: Build Command ✓
+**Status**: Complete
+**Completed**: 2025-12-20
+**Tag**: v0.5.0-stage7
 **Duration**: Week 4  
 **Goal**: Complete build workflow
 
@@ -376,10 +389,10 @@ git tag v0.4.0-stage6
    - Check error handling
 
 ### Deliverables:
-- [ ] `templsite build` creates complete static site
-- [ ] Progress reporting works
-- [ ] Error messages helpful
-- [ ] Tests passing
+- ✅ `templsite build` creates complete static site
+- ✅ Progress reporting works
+- ✅ Error messages helpful
+- ✅ Tests passing with 50.4% coverage in commands
 
 ### Git:
 ```bash
@@ -391,7 +404,10 @@ git tag v0.5.0-stage7
 
 ---
 
-## Stage 8: Development Server
+## Stage 8: Development Server ✓
+**Status**: Complete
+**Completed**: 2025-12-20
+**Tag**: v0.6.0-stage8
 **Duration**: Week 4-5  
 **Goal**: Local dev server with hot reload
 
@@ -438,11 +454,11 @@ git tag v0.5.0-stage7
    - Reload page on notification
 
 ### Deliverables:
-- [ ] `templsite serve` starts server
-- [ ] File watching triggers rebuilds
-- [ ] Live reload works in browser
-- [ ] Graceful shutdown on Ctrl+C
-- [ ] Tests passing
+- ✅ `templsite serve` starts server
+- ✅ File watching triggers rebuilds
+- ✅ Live reload works in browser via WebSocket
+- ✅ Graceful shutdown on Ctrl+C
+- ✅ Tests passing with 84.1% coverage in internal/watch
 
 ### Git:
 ```bash
@@ -884,5 +900,6 @@ git commit -m "Stage 1: Initial project structure"
 
 ---
 
-**Last Updated**: 2025-01-15
-**Next Review**: After Stage 3 completion
+**Last Updated**: 2025-12-20
+**Current Stage**: Stage 8 Complete (v0.6.0-stage8)
+**Next Stage**: Stage 9 - New Site Command

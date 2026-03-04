@@ -1,0 +1,17 @@
+# Build output
+public/
+site
+
+# Generated templ files
+*_templ.go
+
+# Go
+go.sum
+
+# OS files
+.DS_Store
+
+# Editor files
+.vscode/
+.idea/
+*.swp

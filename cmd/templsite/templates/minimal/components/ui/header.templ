@@ -1,0 +1,21 @@
+package ui
+
+templ Header(siteTitle string, baseURL string) {
+	<header class="bg-base-200 border-b border-base-300">
+		<div class="container mx-auto px-4">
+			<div class="navbar">
+				<div class="navbar-start">
+					<a href={ templ.URL(baseURL) } class="btn btn-ghost text-xl">
+						{ siteTitle }
+					</a>
+				</div>
+				<div class="navbar-end">
+					<ul class="menu menu-horizontal px-1">
+						<li><a href={ templ.URL(baseURL + "/") }>Home</a></li>
+						<li><a href={ templ.URL(baseURL + "/about/") }>About</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</header>
+}

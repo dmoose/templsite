@@ -14,7 +14,7 @@ This document provides complete context for AI agents working on the templsite p
 
 ## Project Status
 
-### Current Version: v0.5.0-stage7
+### Current Version: v0.6.0-stage8
 
 ### Completed Stages
 - ✅ Stage 1: CLI Skeleton (v0.1.0-stage1)
@@ -24,9 +24,10 @@ This document provides complete context for AI agents working on the templsite p
 - ✅ Stage 5: JS & Static Files (v0.3.0-stage5)
 - ✅ Stage 6: Template System (v0.4.0-stage6)
 - ✅ Stage 7: Build Command (v0.5.0-stage7)
+- ✅ Stage 8: Development Server (v0.6.0-stage8)
 
 ### Next Stage
-- ⏭️ Stage 8: Development Server - Live Reload
+- ⏭️ Stage 9: New Site Command - Project Scaffolding
 
 See `PLAN.md` for complete implementation roadmap.
 
@@ -36,12 +37,12 @@ See `PLAN.md` for complete implementation roadmap.
 templsite/
 ├── cmd/templsite/           # CLI application
 │   ├── main.go             # Entry point with signal handling
-│   ├── commands/           # Command implementations (stubs)
-│   │   ├── build.go        # Build command (stub)
-│   │   ├── serve.go        # Serve command (stub)
-│   │   ├── new.go          # New site command (stub)
-│   │   └── components.go   # Component management (stub)
-│   └── templates/          # Embedded starter templates (TODO)
+│   ├── commands/           # Command implementations
+│   │   ├── build.go        # Build command (COMPLETE)
+│   │   ├── serve.go        # Serve command (COMPLETE)
+│   │   ├── new.go          # New site command (TODO: Stage 9)
+│   │   └── components.go   # Component management (TODO: Stage 10)
+│   └── templates/          # Embedded starter templates (TODO: Stage 9)
 │
 ├── components/            # templ layout components
 │   ├── layout/            # Layout components
@@ -75,9 +76,13 @@ templsite/
 │   └── components/        # Component registry (TODO: Stage 10)
 │
 ├── internal/              # Internal packages
-│   ├── server/            # Development server (TODO: Stage 8)
-│   ├── watch/             # File watcher (TODO: Stage 8)
-│   └── build/             # Build orchestration (TODO: Stage 7)
+│   ├── server/            # Development server (COMPLETE)
+│   │   ├── server.go      # HTTP server and rebuild orchestration
+│   │   └── livereload.go  # WebSocket live reload
+│   ├── watch/             # File watcher (COMPLETE)
+│   │   ├── watcher.go     # fsnotify-based file watching
+│   │   └── watcher_test.go # Tests (84.1% coverage)
+│   └── build/             # Build orchestration (empty)
 │
 ├── assets/                # Example asset files
 │   ├── css/
@@ -97,15 +102,16 @@ templsite/
 ### Dependencies
 ```go
 github.com/a-h/templ v0.3.960           // templ components
-github.com/yuin/goldmark v1.7.13         // Markdown parser
+github.com/yuin/goldmark v1.7.13        // Markdown parser
 gopkg.in/yaml.v3 v3.0.1                 // YAML config
 github.com/tdewolff/minify/v2 v2.24.8   // CSS/JS minification
-github.com/fsnotify/fsnotify v1.9.0     // File watching (not yet used)
+github.com/fsnotify/fsnotify v1.9.0     // File watching
+github.com/gorilla/websocket v1.5.3     // WebSocket for live reload
 ```
 
 ### External Tools
 - **Tailwind CSS CLI**: System-installed or auto-downloaded to `bin/tailwindcss`
-- **templ CLI**: For generating templ components (Stage 6+)
+- **templ CLI**: For generating templ components (used in build process)
 
 ## Configuration System
 
@@ -235,7 +241,7 @@ func (s *Site) Build(ctx context.Context) error {
         return fmt.Errorf("building assets: %w", err)
     }
     
-    // 3. Render pages (TODO: Stage 6)
+    // 3. Render pages
     if err := s.renderPages(ctx); err != nil {
         return fmt.Errorf("rendering pages: %w", err)
     }
@@ -248,11 +254,11 @@ func (s *Site) Build(ctx context.Context) error {
 
 ### Common Commands
 - `make setup` - Download dependencies and Tailwind CLI
-- `make build` - Build the binary
+- `make build` - Build the binary (includes `templ generate`)
 - `make test` - Run tests with race detector
-- `make clean` - Clean build artifacts
+- `make clean` - Clean build artifacts (including generated templ files)
 - `make install` - Install to GOPATH
-- `make dev` - Start development server (TODO)
+- `make generate` - Generate templ components
 
 ### Tailwind CLI Management
 - Detects system-installed Tailwind first
@@ -266,6 +272,8 @@ func (s *Site) Build(ctx context.Context) error {
 - `pkg/site`: 86.1%
 - `pkg/content`: 85.8%
 - `pkg/assets`: 78.8%
+- `internal/watch`: 84.1%
+- `cmd/templsite/commands`: 50.4%
 
 ### Testing Patterns
 - Use `t.TempDir()` for isolated file operations
@@ -293,7 +301,7 @@ git checkout -b stage-N-description
 git add .
 git commit -m "Stage N: Description"
 git checkout main
-git merge stage-N-description
+git merge stage-N-description --no-ff
 git tag vX.Y.Z-stageN
 ```
 
@@ -305,6 +313,10 @@ Detailed changes:
 - Feature 1
 - Feature 2
 - Tests and coverage
+
+Deliverables:
+✅ Item 1
+✅ Item 2
 ```
 
 ## Common Development Tasks
@@ -313,7 +325,7 @@ Detailed changes:
 1. Create branch: `git checkout -b feature-name`
 2. Implement code in appropriate package (`pkg/` or `internal/`)
 3. Write tests achieving >75% coverage
-4. Update documentation (README.md, PLAN.md)
+4. Update documentation (AGENT.md, PLAN.md, README.md if user-facing)
 5. Run `make test` to verify
 6. Commit with descriptive message
 
@@ -330,57 +342,47 @@ Detailed changes:
 3. Verify test now passes
 4. Check for similar issues in related code
 
-## Stage 6 Complete: Template System ✅
+## Completed Stages
 
-### Implemented Features
-Stage 6 successfully implemented templ component rendering for HTML generation.
+### Stage 6: Template System ✅
 
-#### Completed Tasks
-1. ✅ Created base templ components:
-   - `components/layout/base.templ` - HTML shell (DOCTYPE, head, body)
-   - `components/layout/page.templ` - Page layout with header/footer
-   - `components/ui/header.templ` - Site header with navigation
-   - `components/ui/footer.templ` - Site footer with copyright
-2. ✅ Updated Makefile: `build` target depends on `generate`
-3. ✅ Implemented `renderPages()` - orchestrates page rendering
-4. ✅ Implemented `renderPage()` - renders individual pages
-5. ✅ Implemented `getOutputPath()` - clean URL structure
-6. ✅ Comprehensive test coverage (6 unit tests + 2 integration tests)
+#### Implemented Features
+- Created base templ components:
+  - `components/layout/base.templ` - HTML shell (DOCTYPE, head, body)
+  - `components/layout/page.templ` - Page layout with header/footer
+  - `components/ui/header.templ` - Site header with navigation
+  - `components/ui/footer.templ` - Site footer with copyright
+- Updated Makefile: `build` target depends on `generate`
+- Implemented `renderPages()` - orchestrates page rendering
+- Implemented `renderPage()` - renders individual pages
+- Implemented `getOutputPath()` - clean URL structure
 
 #### Key Implementation Details
 - templ components compile to Go functions via `templ generate`
-- Generated files: `*_templ.go` (gitignored via .gitignore)
+- Generated files: `*_templ.go` (gitignored)
 - Components receive typed parameters (site config, page data)
 - URL structure: `/about/` → `public/about/index.html`
 - Full build pipeline: content → assets → rendering
 - All errors handled at compile time (type-safe)
 
 #### Test Results
-- 42 total tests passing
-- pkg/site coverage: 86.1% (increased from 85.2%)
-- Integration tests verify full build pipeline works end-to-end
+- 48 total tests passing
+- pkg/site coverage: 86.1%
+- Integration tests verify full build pipeline
 
-## Stage 7 Complete: Build Command ✅
+### Stage 7: Build Command ✅
 
-### Implemented Features
-Stage 7 successfully implemented the complete build command with CLI interface.
-
-#### Completed Tasks
-1. ✅ Implemented `cmd/templsite/commands/build.go` with full functionality
-2. ✅ Command-line flags:
-   - `--config` - Specify configuration file path
-   - `--output` - Override output directory
-   - `--verbose` - Enable debug-level logging
-   - `--clean` - Clean output directory before build
-3. ✅ Progress reporting with structured logging (log/slog)
-4. ✅ Build statistics reporting:
-   - Pages rendered
-   - Assets processed
-   - Total files generated
-   - Total output size (human-readable format)
-   - Build duration
-5. ✅ Error handling with helpful messages
-6. ✅ Context cancellation support
+#### Implemented Features
+- Implemented `cmd/templsite/commands/build.go` with full CLI
+- Command-line flags:
+  - `--config` - Specify configuration file path
+  - `--output` - Override output directory
+  - `--verbose` - Enable debug-level logging
+  - `--clean` - Clean output directory before build
+- Progress reporting with structured logging (log/slog)
+- Build statistics reporting (pages, assets, files, size, duration)
+- Error handling with helpful messages
+- Context cancellation support
 
 #### Key Implementation Details
 - Flag parsing with standard `flag` package
@@ -388,12 +390,10 @@ Stage 7 successfully implemented the complete build command with CLI interface.
 - Build stats collection via directory walking
 - Human-readable size formatting (B, KB, MB, GB)
 - Absolute path reporting for clarity
-- Clean success messages with summary
 
 #### Test Results
 - 7 integration tests for build command
-- Coverage: 66.0% for commands package
-- All 48 tests passing across project
+- Coverage: 50.4% for commands package (diluted by stub commands)
 - Tests cover: basic build, flags, output override, clean, missing config, cancellation
 
 #### User Experience
@@ -408,25 +408,77 @@ $ templsite build
   Output: /path/to/public
 ```
 
-## Stage 8 Preparation
+### Stage 8: Development Server ✅
 
-### What's Next: Development Server
-Stage 8 will implement the development server with live reload functionality.
+#### Implemented Features
+- File watching with fsnotify (`internal/watch/watcher.go`):
+  - Watches content, assets, components, config.yaml
+  - Debouncing (100ms default) to prevent rebuild spam
+  - Filters relevant file types (.md, .templ, .css, .js, .yaml, .go)
+  - Ignores hidden files, build output, generated files
+  
+- WebSocket live reload (`internal/server/livereload.go`):
+  - Connection pool for multiple browsers
+  - Ping/pong keep-alive
+  - Graceful disconnect handling
+  - Automatic reconnection with exponential backoff
+  - Client-side JavaScript automatically injected into HTML
+
+- HTTP development server (`internal/server/server.go`):
+  - Serves static files from public directory
+  - Auto-injects live reload script
+  - Automatic rebuild on file changes
+  - Clean URLs (serves index.html for directories)
+  - Proper content types for all file formats
+  - No-cache headers for development
+  - Recursive directory watching
+
+- Serve command (`cmd/templsite/commands/serve.go`):
+  - Flag support (--port, --addr, --config, --verbose)
+  - Graceful shutdown on Ctrl+C
+  - Initial build on startup
+  - Progress reporting
+
+#### Key Implementation Details
+- Debouncing prevents multiple rapid rebuilds (100ms delay, configurable)
+- WebSocket route: `/_live-reload`
+- File watcher recursively adds subdirectories
+- Minimum rebuild interval: 500ms (prevents overlapping builds)
+- JavaScript reconnection: 1s → 30s exponential backoff
+
+#### Test Results
+- 8 unit tests for watcher (84.1% coverage)
+- Tests cover: file changes, debouncing, context cancellation, file filtering
+- 56 total tests passing across project
+
+#### User Experience
+```bash
+$ templsite serve
+
+✓ Development server running at http://localhost:8080
+  Press Ctrl+C to stop
+
+[Edit file] → Automatic rebuild → Browser refreshes
+```
+
+## Stage 9 Preparation
+
+### What's Next: New Site Command
+Stage 9 will implement project scaffolding from templates.
 
 #### Tasks
-1. Implement file watcher with fsnotify
-2. Create WebSocket-based live reload
-3. Implement HTTP server for static files
-4. Auto-rebuild on file changes
-5. Inject live reload script into HTML
-6. Graceful shutdown handling
+1. Create three starter templates (minimal, business, blog)
+2. Implement `cmd/templsite/templates/embed.go` with `go:embed`
+3. Implement `cmd/templsite/commands/new.go` with template extraction
+4. Create sample content for each template
+5. Add template-specific documentation
 
 #### Key Considerations
-- Debounce file change events
-- Handle multiple browser connections
-- Special route for WebSocket (/_live-reload)
-- Watch content, components, assets, config
-- Rebuild only what changed (future optimization)
+- Templates embedded with `//go:embed` directive
+- Must copy recursively preserving structure
+- Initialize config.yaml with user-provided values
+- Each template should be immediately buildable
+- Include .gitignore in templates
 
 ## Important Notes
 
@@ -438,11 +490,10 @@ Stage 8 will implement the development server with live reload functionality.
 5. **Pure Go**: No Node.js or system dependencies except Tailwind CLI
 
 ### Known Limitations
-- Commands are stubs (new, serve, components) - will be implemented in later stages
-- No live reload yet (Stage 8)
-- No component registry yet (Stage 10)
-- Serve command is stub (Stage 8)
-- New site scaffolding not implemented (Stage 9)
+- New site command not implemented (Stage 9)
+- Component registry not implemented (Stage 10)
+- No incremental builds (rebuilds everything)
+- No advanced features (RSS, sitemap, search, etc.) - Post-1.0
 
 ### Testing Philosophy
 - Tests should be fast and isolated
@@ -450,11 +501,20 @@ Stage 8 will implement the development server with live reload functionality.
 - Test error paths, not just happy paths
 - Context cancellation should be tested
 - External dependencies (Tailwind CLI) failures should be handled gracefully
+- Prefer table-driven tests for multiple scenarios
+
+### Code Style Guidelines
+- Use structured logging (`log/slog`) not `fmt.Printf`
+- Wrap errors with context: `fmt.Errorf("action failed: %w", err)`
+- Check context cancellation in loops: `select { case <-ctx.Done(): return ctx.Err() }`
+- Use meaningful variable names (avoid single letters except loop counters)
+- Add package-level documentation comments
+- Export only what's necessary from packages
 
 ## Useful Resources
 
 ### Documentation
-- [DESIGN.md](DESIGN.md) - Complete architectural design
+- [DESIGN.md](DESIGN.md) - Complete architectural design and theory
 - [PLAN.md](PLAN.md) - Staged implementation plan with timeline
 - [README.md](README.md) - User-facing documentation
 
@@ -463,6 +523,8 @@ Stage 8 will implement the development server with live reload functionality.
 - [goldmark documentation](https://github.com/yuin/goldmark)
 - [Tailwind CSS v4 docs](https://tailwindcss.com/)
 - [tdewolff/minify docs](https://github.com/tdewolff/minify)
+- [fsnotify documentation](https://github.com/fsnotify/fsnotify)
+- [gorilla/websocket documentation](https://github.com/gorilla/websocket)
 
 ## Quick Reference Commands
 
@@ -476,7 +538,8 @@ go test -v ./pkg/site/...
 go test -v -run TestSpecificTest ./pkg/content/...
 
 # Coverage report
-make test-coverage
+go test ./... -coverprofile=coverage.out
+go tool cover -html=coverage.out
 
 # Format code
 make fmt
@@ -484,8 +547,13 @@ make fmt
 # Install dependencies
 go mod tidy
 
+# Generate templ components
+make generate
+
 # Run binary
 ./bin/templsite --help
+./bin/templsite build
+./bin/templsite serve
 ```
 
 ## Debugging Tips
@@ -495,19 +563,61 @@ go mod tidy
 3. **Path Issues**: Remember paths must start with project root (e.g., `templsite/...`)
 4. **Context Errors**: Check if operations properly handle context cancellation
 5. **Tailwind Errors**: Verify CLI is installed with `make setup-tailwind`
+6. **WebSocket Issues**: Check browser console for connection errors
+7. **File Watch Issues**: Use `--verbose` flag to see debug logs
+
+## Current Capabilities
+
+### What Works
+- ✅ Parse Markdown with YAML frontmatter
+- ✅ Process Tailwind CSS (auto-download CLI if needed)
+- ✅ Minify JavaScript
+- ✅ Copy static assets
+- ✅ Render pages with type-safe templ components
+- ✅ Build complete static sites
+- ✅ Development server with live reload
+- ✅ File watching with automatic rebuilds
+- ✅ Multi-browser support for live reload
+
+### What Doesn't Work Yet
+- ❌ Project scaffolding (`templsite new`)
+- ❌ Component registry integration
+- ❌ Advanced features (RSS, sitemap, search)
+- ❌ Incremental builds
+
+### How to Use
+```bash
+# Setup a project manually
+mkdir mysite && cd mysite
+mkdir -p content assets/css components
+echo "title: My Site\nbaseURL: http://localhost:8080" > config.yaml
+echo "# Hello\nContent here" > content/index.md
+echo "@import 'tailwindcss';" > assets/css/app.css
+
+# Create templ components (copy from examples)
+# Then build
+templsite build
+
+# Or develop
+templsite serve
+```
 
 ## Contact & Contributing
 
 This is an active development project. When resuming work:
 
 1. Read PLAN.md for current stage objectives
-2. Review recent commits for context
+2. Review recent commits for context (`git log --oneline -10`)
 3. Run `make test` to verify current state
 4. Check DESIGN.md for architectural decisions
 5. Follow existing patterns and conventions
+6. Always add debug logging for new features
+7. Update this document (AGENT.md) when completing stages
 
 ---
 
 **Last Updated**: 2025-12-20  
-**Current Stage**: Stage 7 Complete (v0.5.0-stage7)  
-**Next Milestone**: Stage 8 - Development Server
+**Current Stage**: Stage 8 Complete (v0.6.0-stage8)  
+**Next Milestone**: Stage 9 - New Site Command  
+**Total Tests**: 56 passing  
+**Average Coverage**: ~77%
