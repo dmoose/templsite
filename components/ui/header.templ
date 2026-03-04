@@ -1,0 +1,19 @@
+package ui
+
+templ Header(siteTitle string, baseURL string) {
+	<header class="bg-base-200 border-b border-base-300">
+		<div class="container mx-auto px-4 py-4">
+			<nav class="flex items-center justify-between">
+				<div class="flex items-center">
+					<a href={ templ.URL(baseURL) } class="text-xl font-bold text-primary hover:text-primary-focus">
+						{ siteTitle }
+					</a>
+				</div>
+				<div class="flex gap-4">
+					<a href={ templ.URL(baseURL + "/") } class="hover:text-primary">Home</a>
+					<a href={ templ.URL(baseURL + "/about/") } class="hover:text-primary">About</a>
+				</div>
+			</nav>
+		</div>
+	</header>
+}

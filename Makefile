@@ -76,7 +76,7 @@ generate: ## Generate templ components
 	@templ generate
 	@echo "✓ Components generated"
 
-build: deps ## Build the binary
+build: deps generate ## Build the binary
 	@echo "Building $(BINARY_NAME)..."
 	@mkdir -p bin
 	$(GOBUILD) -o $(BINARY_PATH) ./cmd/templsite
