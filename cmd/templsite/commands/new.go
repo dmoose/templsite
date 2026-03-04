@@ -14,7 +14,7 @@ import (
 	"strings"
 	"text/template"
 
-	"git.catapulsion.com/templsite/cmd/templsite/templates"
+	"github.com/dmoose/templsite/cmd/templsite/templates"
 )
 
 // New creates a new site from a template
@@ -129,7 +129,7 @@ func New(ctx context.Context, args []string) error {
 		}
 
 		// Append replace directive
-		replaceDirective := fmt.Sprintf("\n// Local development - remove for production\nreplace git.catapulsion.com/templsite => %s\n", absTemplsitePath)
+		replaceDirective := fmt.Sprintf("\n// Local development - remove for production\nreplace github.com/dmoose/templsite => %s\n", absTemplsitePath)
 		goModContent = append(goModContent, []byte(replaceDirective)...)
 		if err := os.WriteFile(goModPath, goModContent, 0644); err != nil {
 			return fmt.Errorf("writing go.mod with replace directive: %w", err)

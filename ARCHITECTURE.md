@@ -19,7 +19,7 @@ Initially, we tried to make `pkg/site` do everything including rendering:
 
 ```go
 // pkg/site/site.go - THIS DOESN'T WORK
-import "git.catapulsion.com/templsite/components/layout"
+import "github.com/dmoose/templsite/components/layout"
 
 func (s *Site) renderPage(page *content.Page) error {
     component := layout.Page(...)  // Uses templsite's components, not user's!
@@ -110,8 +110,8 @@ package main
 
 import (
     "mysite/components/layout"  // User's components
-    "git.catapulsion.com/templsite/pkg/site"
-    "git.catapulsion.com/templsite/pkg/server"
+    "github.com/dmoose/templsite/pkg/site"
+    "github.com/dmoose/templsite/pkg/server"
 )
 
 func main() {
@@ -326,10 +326,10 @@ Each site needs:
 // go.mod
 module mysite
 
-require git.catapulsion.com/templsite v0.x.x
+require github.com/dmoose/templsite v0.x.x
 
 // Local development - remove for production
-replace git.catapulsion.com/templsite => /path/to/templsite
+replace github.com/dmoose/templsite => /path/to/templsite
 ```
 
 The replace directive lets users develop against local templsite. For production, remove it and publish templsite to a real module repository.

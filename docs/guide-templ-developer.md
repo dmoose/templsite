@@ -15,10 +15,10 @@ This design gives you:
 - **IDE support** -- autocomplete, go-to-definition, and refactoring work out of the box.
 - **No template DSL** -- just Go and templ's HTML-like syntax.
 
-The `templsite` library (`git.catapulsion.com/templsite`) provides content parsing, asset building, and a dev server. Your binary imports the library, adds its own components, and controls how pages are rendered.
+The `templsite` library (`github.com/dmoose/templsite`) provides content parsing, asset building, and a dev server. Your binary imports the library, adds its own components, and controls how pages are rendered.
 
 **Repository:** [github.com/dmoose/templsite](https://github.com/dmoose/templsite)
-**Module path:** `git.catapulsion.com/templsite`
+**Module path:** `github.com/dmoose/templsite`
 
 ---
 
@@ -61,7 +61,7 @@ After running `templsite new mysite --template tailwind`, you get:
 ```
 mysite/
 ├── main.go              # Your site binary -- build, serve, and new commands
-├── go.mod               # Go module; imports git.catapulsion.com/templsite
+├── go.mod               # Go module; imports github.com/dmoose/templsite
 ├── config.yaml          # Site configuration
 ├── Makefile             # Build automation
 │
@@ -112,7 +112,7 @@ The scaffolded `components/layout/page.templ` looks like this:
 package layout
 
 import (
-    "git.catapulsion.com/templsite/pkg/content"
+    "github.com/dmoose/templsite/pkg/content"
     "mysite/components/ui"
 )
 
@@ -598,7 +598,7 @@ for _, term := range s.Tags() {
 Use `site.NewPaginator` to paginate any collection of pages:
 
 ```go
-import "git.catapulsion.com/templsite/pkg/site"
+import "github.com/dmoose/templsite/pkg/site"
 
 // Paginate blog posts, 10 per page, base URL /blog/
 blogPages := s.RegularPagesInSection("blog")

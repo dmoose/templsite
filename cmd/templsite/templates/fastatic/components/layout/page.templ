@@ -1,13 +1,13 @@
 package layout
 
 import (
-	"git.catapulsion.com/templsite/pkg/content"
-	"git.catapulsion.com/templsite/pkg/site"
+	"github.com/dmoose/templsite/pkg/content"
+	"github.com/dmoose/templsite/pkg/site"
 )
 
 templ Page(s *site.Site, page *content.Page) {
 	@Base(PageMeta{
-		Title:        page.Title + " - " + s.Config.Title,
+		Title:        pageTitle(page, s),
 		Description:  page.Description,
 		SiteName:     s.Config.Title,
 		BaseURL:      s.Config.BaseURL,
@@ -15,11 +15,44 @@ templ Page(s *site.Site, page *content.Page) {
 		Language:     langOrDefault(s.Config.Language),
 		ThemeColor:   s.Config.ThemeColor,
 		AssetVersion: s.AssetVersion,
-	}, pageBody(page))
+	}, pageBody(s, page))
 }
 
-templ pageBody(page *content.Page) {
+templ pageBody(s *site.Site, page *content.Page) {
+	switch page.Layout {
+		case "home":
+			@homePage(s, page)
+		case "404":
+			@notFoundPage(s, page)
+		default:
+			@contentPage(s, page)
+	}
+}
+
+templ homePage(s *site.Site, page *content.Page) {
 	<main>
-		@templ.Raw(page.Content)
+		<div class="prose">
+			@templ.Raw(page.Content)
+		</div>
+	</main>
+}
+
+templ contentPage(s *site.Site, page *content.Page) {
+	<main>
+		<div class="prose">
+			@templ.Raw(page.Content)
+		</div>
+	</main>
+}
+
+templ notFoundPage(s *site.Site, page *content.Page) {
+	<main>
+		<div style="text-align: center; padding: 4rem 0;">
+			<h1 style="font-size: 4rem; opacity: 0.5;">404</h1>
+			<div class="prose">
+				@templ.Raw(page.Content)
+			</div>
+			<a href="/">Back to Home</a>
+		</div>
 	</main>
 }

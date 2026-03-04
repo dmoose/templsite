@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"git.catapulsion.com/templsite/pkg/content"
+	"github.com/dmoose/templsite/pkg/content"
 )
 
 func TestNew(t *testing.T) {

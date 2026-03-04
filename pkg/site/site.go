@@ -15,8 +15,8 @@ import (
 	chromahtml "github.com/alecthomas/chroma/v2/formatters/html"
 	"github.com/alecthomas/chroma/v2/styles"
 
-	"git.catapulsion.com/templsite/pkg/assets"
-	"git.catapulsion.com/templsite/pkg/content"
+	"github.com/dmoose/templsite/pkg/assets"
+	"github.com/dmoose/templsite/pkg/content"
 )
 
 // Site represents a static site with all its content and configuration

@@ -266,4 +266,4 @@ Basic Go knowledge helps, but you can get started by editing Markdown content, c
 
 ## License
 
-Apache License 2.0
+MIT License — see [LICENSE](LICENSE) for details.

@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"git.catapulsion.com/templsite/pkg/site"
+	"github.com/dmoose/templsite/pkg/site"
 )
 
 // Build builds the site for production

@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"git.catapulsion.com/templsite/cmd/templsite/commands"
+	"github.com/dmoose/templsite/cmd/templsite/commands"
 )
 
 // Version information set via ldflags at build time
