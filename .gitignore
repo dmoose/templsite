@@ -60,9 +60,7 @@ test-site/
 *.tar.gz
 *.zip
 
-# Checkpoint artifacts (temporary files, not tracked)
-.checkpoint-input
-.checkpoint-diff
-.checkpoint-lock
-.checkpoint-status.yaml
-.checkpoint-session.yaml
+# AI tool artifacts
+.claude/
+.checkpoint/
+.checkpoint-*

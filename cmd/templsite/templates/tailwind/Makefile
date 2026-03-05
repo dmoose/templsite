@@ -14,7 +14,7 @@ serve: build ## Start development server
 	@./site serve
 
 deploy: build ## Build static site to public/
-	@./site build
+	@./site build --env production
 
 prod: build ## Build production site (uses config.production.yaml)
 	@./site build --env production

@@ -1001,4 +1001,4 @@ No Node.js, npm, or webpack is required anywhere in the toolchain.
 
 ## License
 
-templsite is licensed under the Apache License 2.0. See the LICENSE file in the repository for details.
+templsite is licensed under the MIT License. See the [LICENSE](../LICENSE) file in the repository for details.

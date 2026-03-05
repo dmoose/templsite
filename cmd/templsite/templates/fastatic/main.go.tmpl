@@ -31,7 +31,11 @@ func run(ctx context.Context) error {
 	}
 
 	// Extract --env flag from remaining args
-	env := extractFlag(os.Args[2:], "env")
+	var flagArgs []string
+	if len(os.Args) > 2 {
+		flagArgs = os.Args[2:]
+	}
+	env := extractFlag(flagArgs, "env")
 
 	switch command {
 	case "build":
