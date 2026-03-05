@@ -1,0 +1,38 @@
+# Site Configuration
+# This is an example configuration file for templsite
+
+# Site title - displayed in the browser tab and used in metadata
+title: "My Site"
+
+# Base URL for the site - used for generating absolute URLs
+# In production, set this to your actual domain (e.g., "https://example.com")
+baseURL: "http://localhost:8080"
+
+# Content settings
+content:
+  # Directory containing Markdown content files
+  dir: "content"
+
+  # Default layout to use for pages without a layout specified in frontmatter
+  defaultLayout: "page"
+
+# Asset processing settings
+assets:
+  # Directory containing source assets (CSS, JS, images)
+  inputDir: "assets"
+
+  # Subdirectory within the output directory where assets will be placed
+  outputDir: "assets"
+
+  # Minify CSS and JS files for production
+  minify: false
+
+  # Add content-based hash to filenames for cache busting
+  fingerprint: false
+
+# Directory where the built site will be generated
+outputDir: "public"
+
+# Theme color preference (optional)
+# Options: "light", "dark", "auto"
+themeColor: "light"
