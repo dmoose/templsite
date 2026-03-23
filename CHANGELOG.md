@@ -4,6 +4,8 @@ All notable changes to templsite are documented in this file.
 
 ## Unreleased
 
+## v1.0.0
+
 ### Added
 - Sections, taxonomies, and pagination support
 - RSS/Atom/JSON feed generation
@@ -15,10 +17,12 @@ All notable changes to templsite are documented in this file.
 - Syntax highlighting for code blocks
 - Asset versioning with content hashing
 - Multiple template support (tailwind, fastatic)
+- llms.txt generation with data-driven page support
+- Cobra CLI with subcommands and auto-generated help
 
 ### Fixed
 - Resolved all golangci-lint errcheck and unused warnings
-- Documentation consistency improvements
+- Lint fix for defer/exit ordering
 
 ## v0.7.0 — Project Scaffolding
 
