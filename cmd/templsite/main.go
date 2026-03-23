@@ -33,10 +33,11 @@ func main() {
 	// Setup context with signal handling
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
 
 	root := newRootCmd(ctx)
-	if err := root.Execute(); err != nil {
+	err := root.Execute()
+	cancel()
+	if err != nil {
 		os.Exit(1)
 	}
 }
@@ -48,10 +49,10 @@ func newRootCmd(ctx context.Context) *cobra.Command {
 	}
 
 	root := &cobra.Command{
-		Use:           "templsite",
-		Short:         "A modern static site generator built with Go and templ",
-		Long:          "templsite - A modern static site generator built with Go and templ\n\nDocumentation: https://github.com/dmoose/templsite",
-		Version:       fmt.Sprintf("%s (%s) built %s", version, c, buildTime),
+		Use:          "templsite",
+		Short:        "A modern static site generator built with Go and templ",
+		Long:         "templsite - A modern static site generator built with Go and templ\n\nDocumentation: https://github.com/dmoose/templsite",
+		Version:      fmt.Sprintf("%s (%s) built %s", version, c, buildTime),
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
