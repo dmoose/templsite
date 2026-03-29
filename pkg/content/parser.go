@@ -163,7 +163,7 @@ func (p *Parser) ParseFile(ctx context.Context, path string) (*Page, error) {
 	summary := ExtractSummary(rawContent, htmlContent, 50)
 
 	// Generate table of contents (h2-h4 by default)
-	// "page-toc" ID enables go-components scroll-spy JS binding
+	// "page-toc" ID enables IntersectionObserver-based scroll-spy binding
 	toc := GenerateTOC(htmlContent, 2, 4, "page-toc")
 
 	// Create page

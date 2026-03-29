@@ -22,7 +22,7 @@ var headingRegex = regexp.MustCompile(`<h([1-6])(?:\s+id="([^"]*)")?[^>]*>(.*?)<
 
 // GenerateTOC extracts headings from HTML and generates a table of contents.
 // minLevel and maxLevel control which heading levels to include (default: 2-4).
-// The optional tocID parameter scopes the TOC for go-components JS scroll-spy;
+// The optional tocID parameter scopes the TOC for JS scroll-spy;
 // when provided, each link gets data-tui-toc-id for IntersectionObserver binding.
 func GenerateTOC(html string, minLevel, maxLevel int, tocID ...string) string {
 	if minLevel <= 0 {
@@ -121,9 +121,9 @@ func renderTOC(entries []*TOCEntry, tocID string) string {
 }
 
 // renderTOCLevel recursively renders TOC entries at a given level.
-// Output uses CSS classes and data attributes compatible with go-components:
-// toc-list on <ul>, toc-item/toc-item-h{N} on <li>, toc-link on <a>,
-// and data-tui-toc-link/data-tui-toc-href/data-tui-toc-id for JS scroll-spy.
+// Output uses CSS classes: toc-list on <ul>, toc-item/toc-item-h{N} on <li>,
+// toc-link on <a>. Data attributes data-tui-toc-link/data-tui-toc-href/data-tui-toc-id
+// support IntersectionObserver-based scroll-spy.
 func renderTOCLevel(buf *strings.Builder, entries []*TOCEntry, baseLevel int, tocID string) {
 	if len(entries) == 0 {
 		return
@@ -163,7 +163,7 @@ func renderTOCLevel(buf *strings.Builder, entries []*TOCEntry, baseLevel int, to
 }
 
 // TOCFromEntries builds TOC HTML from a slice of entries (alternative API).
-// The optional tocID parameter enables go-components JS scroll-spy binding.
+// The optional tocID parameter enables JS scroll-spy binding via data attributes.
 func TOCFromEntries(entries []*TOCEntry, tocID ...string) string {
 	id := ""
 	if len(tocID) > 0 {

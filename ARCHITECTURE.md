@@ -367,7 +367,7 @@ go build
 
 ### Component Management (fstctl)
 
-For the fastatic path, component management is handled by `fstctl` (from go-components):
+For the fastatic path, component management is handled by `fstctl`:
 
 ```bash
 cd mysite
