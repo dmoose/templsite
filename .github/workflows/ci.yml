@@ -20,8 +20,13 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
 
+      # The generator must match the templ runtime pinned in go.mod: a newer
+      # CLI emits calls against APIs the pinned library does not have.
       - name: Install templ
-        run: go install github.com/a-h/templ/cmd/templ@latest
+        run: |
+          version=$(go list -m -f '{{.Version}}' github.com/a-h/templ)
+          echo "installing templ $version (pinned by go.mod)"
+          go install "github.com/a-h/templ/cmd/templ@$version"
 
       - name: Generate templ components
         run: templ generate -path ./components
@@ -42,8 +47,13 @@ jobs:
         with:
           go-version: '1.26'
 
+      # The generator must match the templ runtime pinned in go.mod: a newer
+      # CLI emits calls against APIs the pinned library does not have.
       - name: Install templ
-        run: go install github.com/a-h/templ/cmd/templ@latest
+        run: |
+          version=$(go list -m -f '{{.Version}}' github.com/a-h/templ)
+          echo "installing templ $version (pinned by go.mod)"
+          go install "github.com/a-h/templ/cmd/templ@$version"
 
       - name: Generate templ components
         run: templ generate -path ./components
