@@ -4,6 +4,20 @@ All notable changes to templsite are documented in this file.
 
 ## Unreleased
 
+### Changed
+- Builds are byte-reproducible: two builds of unchanged sources produce
+  identical output. Feed timestamps now derive from content instead of the
+  wall clock.
+- **Breaking:** feeds contain only dated pages. An undated page has no honest
+  `<updated>`/`pubDate`, so it is no longer syndicated.
+- **Breaking:** the feed-level `<updated>` (Atom) and `lastBuildDate` (RSS) are
+  the newest entry date rather than the build time.
+- **Breaking:** a site with no dated pages emits no feed at all. `feed.xml` is
+  no longer written, and `Site.RSS`, `Site.Atom`, and `Site.JSON` return an
+  empty string so callers can skip writing the file.
+- Sitemap sections and taxonomy terms are emitted in sorted order; previously
+  they followed Go map iteration order and varied between builds.
+
 ## v1.0.0
 
 ### Added

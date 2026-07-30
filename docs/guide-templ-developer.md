@@ -692,26 +692,41 @@ templ PaginationNav(pager *site.Paginator) {
 
 `Site.Build()` automatically generates these files in `public/` (unless overridden by a file in `static/`):
 
-- **feed.xml** -- Atom 1.0 feed of all regular pages
+- **feed.xml** -- Atom 1.0 feed of dated regular pages
 - **sitemap.xml** -- XML sitemap with all pages, sections, and taxonomy terms
 - **robots.txt** -- Allows all crawlers, references sitemap.xml
 
+### Dates and feeds
+
+Feeds carry only dated pages. A page with no `date` in its frontmatter has no
+honest `<updated>` value, so it is left out, and the feed's own timestamp is the
+newest entry's date. This keeps builds reproducible: rebuild unchanged content
+and you get byte-identical output.
+
+A site with no dated pages has nothing to syndicate, so no `feed.xml` is written
+at all. That is expected for product sites without a blog.
+
 ### Custom feeds
 
-For more control, use the feed generation methods directly in `renderPages`:
+For more control, use the feed generation methods directly in `renderPages`.
+Each returns an empty string when none of the given pages are dated, so check
+before writing:
 
 ```go
 // RSS 2.0
-rss := s.RSS(blogPages, "My Blog", "Latest posts from my blog")
-os.WriteFile(filepath.Join(s.OutputDir(), "rss.xml"), []byte(rss), 0644)
+if rss := s.RSS(blogPages, "My Blog", "Latest posts from my blog"); rss != "" {
+    os.WriteFile(filepath.Join(s.OutputDir(), "rss.xml"), []byte(rss), 0644)
+}
 
 // Atom 1.0
-atom := s.Atom(blogPages, "My Blog", "Latest posts")
-os.WriteFile(filepath.Join(s.OutputDir(), "atom.xml"), []byte(atom), 0644)
+if atom := s.Atom(blogPages, "My Blog", "Latest posts"); atom != "" {
+    os.WriteFile(filepath.Join(s.OutputDir(), "atom.xml"), []byte(atom), 0644)
+}
 
 // JSON Feed 1.1
-jsonFeed := s.JSON(blogPages, "My Blog", "Latest posts from my blog")
-os.WriteFile(filepath.Join(s.OutputDir(), "feed.json"), []byte(jsonFeed), 0644)
+if jsonFeed := s.JSON(blogPages, "My Blog", "Latest posts"); jsonFeed != "" {
+    os.WriteFile(filepath.Join(s.OutputDir(), "feed.json"), []byte(jsonFeed), 0644)
+}
 ```
 
 ### Linking feeds in HTML

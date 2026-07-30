@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"sort"
 )
 
 // URLSet represents a sitemap.xml document
@@ -24,7 +25,12 @@ type SitemapURL struct {
 	Priority   string `xml:"priority,omitempty"`
 }
 
-// Sitemap generates a sitemap.xml for the site
+// Sitemap generates a sitemap.xml for the site.
+//
+// lastmod comes from the page date, and is omitted for undated pages rather
+// than filled in from the clock. Sections and taxonomy terms are emitted in
+// sorted order so that repeated builds of unchanged content produce identical
+// bytes; ranging over the underlying maps directly would not.
 func (s *Site) Sitemap() string {
 	var urls []SitemapURL
 
@@ -40,7 +46,14 @@ func (s *Site) Sitemap() string {
 	}
 
 	// Add section index pages
-	for _, section := range s.Sections {
+	sectionNames := make([]string, 0, len(s.Sections))
+	for name := range s.Sections {
+		sectionNames = append(sectionNames, name)
+	}
+	sort.Strings(sectionNames)
+
+	for _, name := range sectionNames {
+		section := s.Sections[name]
 		if section.Name == "_root" {
 			// Add homepage
 			urls = append(urls, SitemapURL{
@@ -54,8 +67,14 @@ func (s *Site) Sitemap() string {
 	}
 
 	// Add taxonomy term pages
-	for _, tax := range s.Taxonomies {
-		for _, term := range tax.Terms {
+	taxNames := make([]string, 0, len(s.Taxonomies))
+	for name := range s.Taxonomies {
+		taxNames = append(taxNames, name)
+	}
+	sort.Strings(taxNames)
+
+	for _, name := range taxNames {
+		for _, term := range s.Taxonomies[name].TermsByName() {
 			urls = append(urls, SitemapURL{
 				Loc: s.Config.BaseURL + term.URL,
 			})

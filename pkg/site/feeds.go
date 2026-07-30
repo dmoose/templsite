@@ -47,16 +47,27 @@ type RSSItem struct {
 	Author      string `xml:"author,omitempty"`
 }
 
-// RSS generates an RSS 2.0 feed for the given pages
+// RSS generates an RSS 2.0 feed for the given pages.
+//
+// Only dated pages become items, and lastBuildDate is the newest item date, so
+// two builds of unchanged content produce identical bytes. If none of the pages
+// are dated there is nothing to syndicate and RSS returns the empty string;
+// callers should skip writing the file in that case.
 func (s *Site) RSS(pages []*content.Page, title, description string) string {
 	feedURL := s.Config.BaseURL + "/feed.xml"
 
 	items := make([]RSSItem, 0, len(pages))
+	var newest time.Time
 	for _, page := range pages {
+		if page.Date.IsZero() {
+			continue
+		}
+
 		item := RSSItem{
-			Title: page.Title,
-			Link:  s.Config.BaseURL + page.URL,
-			GUID:  s.Config.BaseURL + page.URL,
+			Title:   page.Title,
+			Link:    s.Config.BaseURL + page.URL,
+			GUID:    s.Config.BaseURL + page.URL,
+			PubDate: page.Date.Format(time.RFC1123Z),
 		}
 
 		if page.Description != "" {
@@ -65,15 +76,19 @@ func (s *Site) RSS(pages []*content.Page, title, description string) string {
 			item.Description = page.Summary
 		}
 
-		if !page.Date.IsZero() {
-			item.PubDate = page.Date.Format(time.RFC1123Z)
-		}
-
 		if page.Author != "" {
 			item.Author = page.Author
 		}
 
+		if page.Date.After(newest) {
+			newest = page.Date
+		}
+
 		items = append(items, item)
+	}
+
+	if len(items) == 0 {
+		return ""
 	}
 
 	feed := RSSFeed{
@@ -97,8 +112,8 @@ func (s *Site) RSS(pages []*content.Page, title, description string) string {
 		feed.Channel.Language = s.Config.Language
 	}
 
-	// Add last build date
-	feed.Channel.LastBuildDate = time.Now().Format(time.RFC1123Z)
+	// Last build date derives from content, not the clock
+	feed.Channel.LastBuildDate = newest.Format(time.RFC1123Z)
 
 	var buf bytes.Buffer
 	buf.WriteString(xml.Header)
@@ -145,25 +160,30 @@ type AtomEntry struct {
 	Author  *AtomAuthor `xml:"author,omitempty"`
 }
 
-// Atom generates an Atom 1.0 feed for the given pages
+// Atom generates an Atom 1.0 feed for the given pages.
+//
+// Only dated pages become entries, and the feed-level <updated> is the newest
+// entry date, so two builds of unchanged content produce identical bytes. If
+// none of the pages are dated there is nothing to syndicate and Atom returns
+// the empty string; callers should skip writing the file in that case.
 func (s *Site) Atom(pages []*content.Page, title, subtitle string) string {
 	feedURL := s.Config.BaseURL + "/atom.xml"
 
 	entries := make([]AtomEntry, 0, len(pages))
+	var newest time.Time
 	for _, page := range pages {
+		if page.Date.IsZero() {
+			continue
+		}
+
 		entry := AtomEntry{
 			Title: page.Title,
 			Link: AtomFLink{
 				Href: s.Config.BaseURL + page.URL,
 				Rel:  "alternate",
 			},
-			ID: s.Config.BaseURL + page.URL,
-		}
-
-		if !page.Date.IsZero() {
-			entry.Updated = page.Date.Format(time.RFC3339)
-		} else {
-			entry.Updated = time.Now().Format(time.RFC3339)
+			ID:      s.Config.BaseURL + page.URL,
+			Updated: page.Date.Format(time.RFC3339),
 		}
 
 		if page.Description != "" {
@@ -176,7 +196,15 @@ func (s *Site) Atom(pages []*content.Page, title, subtitle string) string {
 			entry.Author = &AtomAuthor{Name: page.Author}
 		}
 
+		if page.Date.After(newest) {
+			newest = page.Date
+		}
+
 		entries = append(entries, entry)
+	}
+
+	if len(entries) == 0 {
+		return ""
 	}
 
 	feed := AtomFeed{
@@ -186,7 +214,7 @@ func (s *Site) Atom(pages []*content.Page, title, subtitle string) string {
 			{Href: s.Config.BaseURL, Rel: "alternate"},
 			{Href: feedURL, Rel: "self", Type: "application/atom+xml"},
 		},
-		Updated: time.Now().Format(time.RFC3339),
+		Updated: newest.Format(time.RFC3339),
 		ID:      s.Config.BaseURL + "/",
 		Entries: entries,
 	}
@@ -226,26 +254,31 @@ type JSONFeedItem struct {
 	} `json:"author,omitempty"`
 }
 
-// JSON generates a JSON Feed 1.1 for the given pages
+// JSON generates a JSON Feed 1.1 for the given pages.
+//
+// Only dated pages become items, matching the RSS and Atom writers. If none of
+// the pages are dated there is nothing to syndicate and JSON returns the empty
+// string; callers should skip writing the file in that case.
 func (s *Site) JSON(pages []*content.Page, title, description string) string {
 	feedURL := s.Config.BaseURL + "/feed.json"
 
 	items := make([]JSONFeedItem, 0, len(pages))
 	for _, page := range pages {
+		if page.Date.IsZero() {
+			continue
+		}
+
 		item := JSONFeedItem{
-			ID:    s.Config.BaseURL + page.URL,
-			URL:   s.Config.BaseURL + page.URL,
-			Title: page.Title,
+			ID:            s.Config.BaseURL + page.URL,
+			URL:           s.Config.BaseURL + page.URL,
+			Title:         page.Title,
+			DatePublished: page.Date.Format(time.RFC3339),
 		}
 
 		if page.Description != "" {
 			item.Summary = page.Description
 		} else if page.Summary != "" {
 			item.Summary = page.Summary
-		}
-
-		if !page.Date.IsZero() {
-			item.DatePublished = page.Date.Format(time.RFC3339)
 		}
 
 		if page.Author != "" {
@@ -255,6 +288,10 @@ func (s *Site) JSON(pages []*content.Page, title, description string) string {
 		}
 
 		items = append(items, item)
+	}
+
+	if len(items) == 0 {
+		return ""
 	}
 
 	feed := JSONFeed{

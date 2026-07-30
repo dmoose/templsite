@@ -516,8 +516,9 @@ func (s *Site) computeAssetVersion() {
 
 // writeGeneratedFiles writes robots.txt, sitemap.xml, site.webmanifest, feed.xml,
 // and 404.html to the output directory. Files are always regenerated to reflect
-// current content. User overrides via static/ are applied afterward by
-// copyStaticFiles(), which runs after this method in the build pipeline.
+// current content. feed.xml is written only when the site has dated pages.
+// User overrides via static/ are applied afterward by copyStaticFiles(), which
+// runs after this method in the build pipeline.
 func (s *Site) writeGeneratedFiles() {
 	outputDir := s.OutputDir()
 
@@ -539,8 +540,15 @@ func (s *Site) writeGeneratedFiles() {
 	writeFile("robots.txt", s.RobotsTxt())
 	writeFile("sitemap.xml", s.Sitemap())
 	writeFile("site.webmanifest", s.Manifest())
-	writeFile("feed.xml", s.Feed())
 	writeFile("404.html", s.Default404())
+
+	// feed.xml is only written when the site has dated content. Feed returns
+	// an empty string otherwise; see Site.Feed.
+	if feed := s.Feed(); feed != "" {
+		writeFile("feed.xml", feed)
+	} else {
+		slog.Debug("no dated pages, skipping feed.xml")
+	}
 
 	// Generate llms.txt files if enabled
 	if s.Config.LLMs.Enabled {
