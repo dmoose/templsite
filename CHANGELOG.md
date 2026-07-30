@@ -4,6 +4,8 @@ All notable changes to templsite are documented in this file.
 
 ## Unreleased
 
+## v1.1.0 — Reproducible Builds
+
 ### Changed
 - Builds are byte-reproducible: two builds of unchanged sources produce
   identical output. Feed timestamps now derive from content instead of the
@@ -17,6 +19,9 @@ All notable changes to templsite are documented in this file.
   empty string so callers can skip writing the file.
 - Sitemap sections and taxonomy terms are emitted in sorted order; previously
   they followed Go map iteration order and varied between builds.
+- Upgraded templ to v0.3.1020. CI installs the generator at the version
+  `go.mod` pins rather than `@latest`, so the generator and the runtime can no
+  longer drift apart.
 
 ## v1.0.0
 
