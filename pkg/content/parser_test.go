@@ -230,8 +230,9 @@ This is a **test** page with some content.
 		t.Errorf("expected URL '/test/', got '%s'", page.URL)
 	}
 
-	// Date-only values are parsed in local timezone (what the user intends)
-	expectedDate := time.Date(2025, 1, 15, 0, 0, 0, 0, time.Local)
+	// Date-only values are UTC: a date names a day, not an instant, so
+	// the builder's timezone must not reach the parsed value.
+	expectedDate := time.Date(2025, 1, 15, 0, 0, 0, 0, time.UTC)
 	if !page.Date.Equal(expectedDate) {
 		t.Errorf("expected date %v, got %v", expectedDate, page.Date)
 	}
@@ -768,5 +769,54 @@ func TestGetIntDefault(t *testing.T) {
 
 	if got := getIntDefault(m, "missing", 100); got != 100 {
 		t.Errorf("expected default 100, got %d", got)
+	}
+}
+
+// TestParseDateIsTimezoneIndependent is the property the UTC change
+// exists to create.
+//
+// A bare `date: 2025-01-15` carries no timezone. Reading it in the
+// builder's local zone put a machine-specific instant into every feed
+// timestamp, so the same content produced different bytes depending on
+// where it was built. These assertions fail if that ever comes back.
+func TestParseDateIsTimezoneIndependent(t *testing.T) {
+	want := time.Date(2025, 1, 15, 0, 0, 0, 0, time.UTC)
+
+	for _, tz := range []string{"UTC", "America/Los_Angeles", "Asia/Tokyo", "Europe/Berlin"} {
+		t.Run(tz, func(t *testing.T) {
+			t.Setenv("TZ", tz)
+			loc, err := time.LoadLocation(tz)
+			if err != nil {
+				t.Skipf("no tzdata for %s: %v", tz, err)
+			}
+			// parseDate reads time.Local at call time; make sure the
+			// zone under test is actually the one in effect.
+			orig := time.Local
+			time.Local = loc
+			t.Cleanup(func() { time.Local = orig })
+
+			got, err := parseDate("2025-01-15")
+			if err != nil {
+				t.Fatalf("parseDate: %v", err)
+			}
+			if !got.Equal(want) {
+				t.Errorf("under TZ=%s got %v, want %v — the builder's zone leaked into a bare date", tz, got, want)
+			}
+			if got.Format(time.RFC3339) != "2025-01-15T00:00:00Z" {
+				t.Errorf("under TZ=%s formats as %s, want 2025-01-15T00:00:00Z", tz, got.Format(time.RFC3339))
+			}
+		})
+	}
+}
+
+// A datetime that names its own zone keeps it — only bare dates are
+// forced to UTC.
+func TestParseDateKeepsExplicitZone(t *testing.T) {
+	got, err := parseDate("2025-01-15T10:30:00+09:00")
+	if err != nil {
+		t.Fatalf("parseDate: %v", err)
+	}
+	if got.Format(time.RFC3339) != "2025-01-15T10:30:00+09:00" {
+		t.Errorf("got %s, want the declared offset preserved", got.Format(time.RFC3339))
 	}
 }

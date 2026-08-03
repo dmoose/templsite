@@ -195,9 +195,12 @@ func (p *Parser) ParseFile(ctx context.Context, path string) (*Page, error) {
 			page.Date = date
 		}
 	} else if dateTime, ok := frontmatter["date"].(time.Time); ok {
-		// YAML parses bare dates (2006-01-02) as UTC midnight, but users mean
-		// local time. Normalize date-only values to local timezone.
-		page.Date = normalizeToLocal(dateTime)
+		// YAML parses a bare date (2006-01-02) as UTC midnight, which is
+		// what we want and what we keep. Interpreting it in the builder's
+		// local zone would make the same content produce different feed
+		// bytes on different machines — a date has no timezone, so the
+		// build must not invent one.
+		page.Date = dateTime
 	}
 
 	return page, nil
@@ -333,11 +336,15 @@ func (p *Parser) extractSection(path string) string {
 }
 
 // parseDate attempts to parse a date string in multiple formats.
-// Date-only formats are parsed in the local timezone (what the user intends
-// when writing "date: 2026-02-12"), while datetime formats preserve their zone.
+//
+// Date-only values are parsed as UTC. A bare date carries no timezone,
+// so reading one in the builder's local zone would put a machine-
+// specific instant into feed timestamps and make the same content build
+// differently in different places. Datetime formats that do carry a
+// zone keep it.
 func parseDate(dateStr string) (time.Time, error) {
-	// Date-only format — parse in local timezone
-	if t, err := time.ParseInLocation("2006-01-02", dateStr, time.Local); err == nil {
+	// Date-only format — UTC, because a date names a day, not an instant.
+	if t, err := time.Parse("2006-01-02", dateStr); err == nil {
 		return t, nil
 	}
 
@@ -356,15 +363,6 @@ func parseDate(dateStr string) (time.Time, error) {
 	}
 
 	return time.Time{}, fmt.Errorf("unable to parse date: %s", dateStr)
-}
-
-// normalizeToLocal converts a UTC midnight time (from YAML auto-parsing bare dates)
-// to local midnight. If the time has a non-zero hour/minute/second, it's left as-is.
-func normalizeToLocal(t time.Time) time.Time {
-	if t.Hour() == 0 && t.Minute() == 0 && t.Second() == 0 && t.Location() == time.UTC {
-		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
-	}
-	return t
 }
 
 // externalLinkTransformer adds target="_blank" and rel="noopener noreferrer"

@@ -235,3 +235,66 @@ func TestSitemapOmitsLastModForUndatedPages(t *testing.T) {
 		t.Errorf("sitemap should omit lastmod when no page is dated; got:\n%s", sitemap)
 	}
 }
+
+// TestBuildIsIdenticalAcrossTimezones is the property the UTC date
+// change exists to create.
+//
+// A bare `date: 2024-01-15` in frontmatter names a day, not an instant.
+// While it was read in the builder's local zone, the RFC3339 and
+// RFC1123Z timestamps in feed output carried that machine's offset —
+// so the same repository produced different bytes on a laptop in
+// California and a CI runner in UTC, and neither was wrong. Building
+// the same fixture under two zones and comparing every emitted file is
+// the only assertion that actually pins this.
+func TestBuildIsIdenticalAcrossTimezones(t *testing.T) {
+	zones := []string{"UTC", "America/Los_Angeles", "Asia/Tokyo"}
+
+	var reference map[string][]byte
+	var referenceZone string
+
+	for _, tz := range zones {
+		loc, err := time.LoadLocation(tz)
+		if err != nil {
+			t.Skipf("no tzdata for %s: %v", tz, err)
+		}
+
+		out := func() map[string][]byte {
+			orig := time.Local
+			time.Local = loc
+			defer func() { time.Local = orig }()
+			return collectOutput(t, buildFixture(t, datedFixture))
+		}()
+
+		if reference == nil {
+			reference, referenceZone = out, tz
+			continue
+		}
+
+		if len(out) != len(reference) {
+			t.Fatalf("TZ=%s produced %d files, TZ=%s produced %d", tz, len(out), referenceZone, len(reference))
+		}
+		for name, want := range reference {
+			got, ok := out[name]
+			if !ok {
+				t.Errorf("TZ=%s did not emit %s", tz, name)
+				continue
+			}
+			if !bytes.Equal(got, want) {
+				t.Errorf("%s differs between TZ=%s and TZ=%s — the builder's timezone reached the output\n%s",
+					name, referenceZone, tz, firstDifferingLine(string(want), string(got)))
+			}
+		}
+	}
+}
+
+// firstDifferingLine reports the first line that differs, which for a
+// timezone leak is the timestamp that carried the offset.
+func firstDifferingLine(a, b string) string {
+	al, bl := strings.Split(a, "\n"), strings.Split(b, "\n")
+	for i := 0; i < len(al) && i < len(bl); i++ {
+		if al[i] != bl[i] {
+			return "  first: " + strings.TrimSpace(al[i]) + "\n  other: " + strings.TrimSpace(bl[i])
+		}
+	}
+	return ""
+}
