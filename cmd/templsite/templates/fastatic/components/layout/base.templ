@@ -1,11 +1,24 @@
 package layout
 
+// firstPaint declares what the page is before any stylesheet lands.
+//
+// The meta is the only color-scheme signal that reaches the browser's
+// pre-CSS navigation canvas, so a dark page stops painting a white
+// canvas first. The CSS then keys color-scheme to the real theme, so
+// UA-rendered surfaces — scrollbars, form controls — follow it too.
+//
+// Through templ.Raw because both payloads are full of braces and templ
+// reads `{` as the start of an expression.
+const firstPaint = `<meta name="color-scheme" content="light dark">
+<style>:root{color-scheme:light}[data-theme="dark"]{color-scheme:dark}</style>`
+
 templ Base(meta PageMeta, content templ.Component) {
 	<!DOCTYPE html>
 	<html lang={ meta.Language }>
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			@templ.Raw(firstPaint)
 			<title>{ meta.Title }</title>
 			<meta name="description" content={ meta.Description }/>
 			<!-- Open Graph -->
@@ -28,10 +41,12 @@ templ Base(meta PageMeta, content templ.Component) {
 			<!-- Font -->
 			<link rel="preconnect" href="https://fonts.googleapis.com"/>
 			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+			<!-- Theme, before the stylesheets: this sets data-theme, and a
+			     page that applies CSS before it runs paints the wrong one. -->
+			<script src={ "/assets/js/theme-init.js?v=" + meta.AssetVersion }></script>
 			<!-- Assets -->
 			<link rel="stylesheet" href={ "/assets/css/main.css?v=" + meta.AssetVersion }/>
 			<link rel="stylesheet" href={ "/assets/css/custom.css?v=" + meta.AssetVersion }/>
-			<script src={ "/assets/js/theme-init.js?v=" + meta.AssetVersion }></script>
 		</head>
 		<body>
 			@content
