@@ -1,4 +1,4 @@
-.PHONY: help build test clean install dev setup deps setup-tailwind generate lint fmt fix
+.PHONY: help build test clean install dev setup deps setup-tailwind generate lint fmt fix ci
 
 # templsite is a self-contained module. When this checkout sits inside a
 # parent go.work that doesn't list it (e.g. the fastatic monorepo),
@@ -138,6 +138,15 @@ lint: ## Run linters (includes vet + formatting checks)
 	@echo "Running linters..."
 	@command -v golangci-lint >/dev/null 2>&1 || { echo "golangci-lint not installed. Install from: https://golangci-lint.run/welcome/install/"; exit 1; }
 	golangci-lint run ./...
+
+ci: ## Exactly what GitHub CI runs — the pre-push gate (also wired as .git/hooks/pre-push)
+	@version=$$(go list -m -f '{{.Version}}' github.com/a-h/templ); \
+		echo "templ $$version (pinned by go.mod)"; \
+		go run "github.com/a-h/templ/cmd/templ@$$version" generate -path ./components
+	go build ./...
+	go test -race ./...
+	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest run --timeout=5m
+	@go fix ./... && test -z "$$(git diff --name-only -- '*.go')" || { echo "go fix produced changes — commit them"; git diff --name-only; exit 1; }
 
 fmt: ## Format code
 	@echo "Formatting code..."
