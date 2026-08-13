@@ -4,6 +4,10 @@ All notable changes to templsite are documented in this file.
 
 ## Unreleased
 
+- fastatic scaffold: `theme-init.js` loads before the stylesheets and the
+  head declares `color-scheme` (meta + `:root`/`[data-theme]` CSS), so a
+  dark-mode first paint can never flash light.
+
 ## v1.1.0 — Reproducible Builds
 
 ### Changed
