@@ -13,7 +13,7 @@ import (
 
 // PageMeta carries all metadata needed by the base layout template.
 type PageMeta struct {
-	Title        string // "Page Title — Site Name"
+	Title        string // "Page Title - Site Name"
 	Description  string // meta description
 	SiteName     string // og:site_name
 	BaseURL      string // for canonical URLs
@@ -30,12 +30,12 @@ func langOrDefault(lang string) string {
 	return lang
 }
 
-// pageTitle: home page gets "SiteTitle — description"; others get "PageTitle — SiteTitle"
+// pageTitle: home page gets "SiteTitle - description"; others get "PageTitle - SiteTitle"
 func pageTitle(page *content.Page, s *site.Site) string {
 	if page.URL == "/" {
-		return s.Config.Title + " — " + s.Config.Description
+		return s.Config.Title + " - " + s.Config.Description
 	}
-	return page.Title + " — " + s.Config.Title
+	return page.Title + " - " + s.Config.Title
 }
 
 // paramString reads a value from site config params by key.
