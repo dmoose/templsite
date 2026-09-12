@@ -82,8 +82,8 @@ func TestFilterPagesFuture(t *testing.T) {
 	}
 
 	// Create a post with a future date
-	futureDate := time.Now().Add(24 * time.Hour).Format("2006-01-02")
-	pastDate := time.Now().Add(-24 * time.Hour).Format("2006-01-02")
+	futureDate := time.Now().UTC().Add(24 * time.Hour).Format("2006-01-02")
+	pastDate := time.Now().UTC().Add(-24 * time.Hour).Format("2006-01-02")
 
 	files := map[string]string{
 		"past.md": `---
@@ -146,7 +146,7 @@ func TestFilterPagesBothOptions(t *testing.T) {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
-	futureDate := time.Now().Add(24 * time.Hour).Format("2006-01-02")
+	futureDate := time.Now().UTC().Add(24 * time.Hour).Format("2006-01-02")
 
 	files := map[string]string{
 		"published.md": `---
