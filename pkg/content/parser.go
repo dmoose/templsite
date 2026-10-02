@@ -69,8 +69,10 @@ func NewParser(contentDir string, opts ...HighlightOptions) *Parser {
 				util.Prioritized(&externalLinkTransformer{}, 500),
 			),
 		),
+		// No hard wraps: a line break inside a paragraph is a soft wrap,
+		// as in CommonMark, so source wrapped at 80 columns reads as one
+		// paragraph. Two trailing spaces or a backslash still break.
 		goldmark.WithRendererOptions(
-			goldmarkhtml.WithHardWraps(),
 			goldmarkhtml.WithXHTML(),
 		),
 	)

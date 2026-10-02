@@ -609,6 +609,37 @@ This is a paragraph with **bold** and *italic* text.
 	}
 }
 
+// TestSoftWrapsJoinParagraphs: a line break inside a paragraph is a soft
+// wrap, as in CommonMark, so source wrapped at 80 columns renders as one
+// flowing paragraph. Two trailing spaces or a backslash still break.
+func TestSoftWrapsJoinParagraphs(t *testing.T) {
+	contentDir := filepath.Join(t.TempDir(), "content")
+	if err := os.MkdirAll(contentDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	testFile := filepath.Join(contentDir, "wrap.md")
+	body := "One sentence wrapped\nat the column.\n\nForced with spaces  \nnext.\n\nForced with a backslash\\\nnext.\n"
+	if err := os.WriteFile(testFile, []byte(body), 0644); err != nil {
+		t.Fatal(err)
+	}
+	page, err := NewParser(contentDir).ParseFile(context.Background(), testFile)
+	if err != nil {
+		t.Fatalf("ParseFile failed: %v", err)
+	}
+	for _, want := range []string{
+		"<p>One sentence wrapped\nat the column.</p>",
+		"<p>Forced with spaces<br />\nnext.</p>",
+		"<p>Forced with a backslash<br />\nnext.</p>",
+	} {
+		if !strings.Contains(page.Content, want) {
+			t.Errorf("looked for %q in\n%s", want, page.Content)
+		}
+	}
+	if n := strings.Count(page.Content, "<br"); n != 2 {
+		t.Errorf("%d line breaks, want the 2 the source asked for", n)
+	}
+}
+
 func TestExtractSection(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content")
