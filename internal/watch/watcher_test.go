@@ -7,8 +7,11 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 func TestNewWatcher(t *testing.T) {
@@ -276,5 +279,29 @@ func TestSetDebounceDelay(t *testing.T) {
 
 	if w.debounceDelay != customDelay {
 		t.Errorf("debounce delay = %v, want %v", w.debounceDelay, customDelay)
+	}
+}
+
+// TestWatcherDebounceFlushIsNotConcurrent feeds events straight into the
+// loop with a debounce short enough that the flush lands while more
+// events arrive. The pending set must only ever be touched by the loop
+// goroutine; under -race this failed when the flush ran on a timer
+// goroutine (CI run 37072588518).
+func TestWatcherDebounceFlushIsNotConcurrent(t *testing.T) {
+	fs := &fsnotify.Watcher{Events: make(chan fsnotify.Event), Errors: make(chan error)}
+	w := &Watcher{watcher: fs, events: make(chan string, 1000), errors: make(chan error, 10), debounceDelay: time.Microsecond}
+
+	ctx := t.Context()
+	w.Start(ctx)
+
+	deadline := time.Now().Add(200 * time.Millisecond)
+	for i := 0; time.Now().Before(deadline); i++ {
+		fs.Events <- fsnotify.Event{Name: filepath.Join("content", "p"+strconv.Itoa(i%7)+".md"), Op: fsnotify.Write}
+	}
+
+	select {
+	case <-w.Events():
+	case <-time.After(time.Second):
+		t.Fatal("no change event emitted")
 	}
 }

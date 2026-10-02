@@ -72,8 +72,11 @@ func (w *Watcher) Close() error {
 
 // watchLoop is the main event processing loop with debouncing
 func (w *Watcher) watchLoop(ctx context.Context) {
-	// Debouncing: collect events and only emit after delay
+	// Debouncing: collect events and only emit after delay. The timer
+	// fires into this loop's select rather than running a callback, so
+	// pendingEvents is only ever touched by this goroutine.
 	var debounceTimer *time.Timer
+	var debounced <-chan time.Time
 	pendingEvents := make(map[string]bool)
 
 	flushEvents := func() {
@@ -103,6 +106,10 @@ func (w *Watcher) watchLoop(ctx context.Context) {
 			}
 			return
 
+		case <-debounced:
+			debounced = nil
+			flushEvents()
+
 		case event, ok := <-w.watcher.Events:
 			if !ok {
 				return
@@ -124,10 +131,12 @@ func (w *Watcher) watchLoop(ctx context.Context) {
 			pendingEvents[event.Name] = true
 
 			// Reset debounce timer
-			if debounceTimer != nil {
-				debounceTimer.Stop()
+			if debounceTimer == nil {
+				debounceTimer = time.NewTimer(w.debounceDelay)
+			} else {
+				debounceTimer.Reset(w.debounceDelay)
 			}
-			debounceTimer = time.AfterFunc(w.debounceDelay, flushEvents)
+			debounced = debounceTimer.C
 
 		case err, ok := <-w.watcher.Errors:
 			if !ok {
