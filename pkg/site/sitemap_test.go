@@ -148,3 +148,46 @@ func TestSitemapEmptySite(t *testing.T) {
 		t.Error("Empty sitemap should have urlset element")
 	}
 }
+
+// TestSitemapOmitsNoIndex: a noindex page is not listed, and a section
+// left with nothing indexable is not listed either.
+func TestSitemapOmitsNoIndex(t *testing.T) {
+	tmpDir := t.TempDir()
+	files := map[string]string{
+		"about.md":              "---\ntitle: About\n---\nBody",
+		"404.md":                "---\ntitle: Not Found\nnoindex: true\n---\nBody",
+		"purchase/completed.md": "---\ntitle: Thanks\nnoindex: true\n---\nBody",
+		"purchase/returned.md":  "---\ntitle: Still thinking\nnoindex: true\n---\nBody",
+		"blog/one.md":           "---\ntitle: One\n---\nBody",
+		"blog/hidden.md":        "---\ntitle: Hidden\nnoindex: true\n---\nBody",
+	}
+	for name, body := range files {
+		path := filepath.Join(tmpDir, "content", name)
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(body), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	config := DefaultConfig()
+	config.BaseURL = "https://example.com"
+	site := NewWithConfig(config)
+	site.SetBaseDir(tmpDir)
+	if err := site.ProcessContent(t.Context()); err != nil {
+		t.Fatalf("ProcessContent failed: %v", err)
+	}
+	sitemap := site.Sitemap()
+
+	for _, want := range []string{"/about/", "/blog/one/", "/blog/"} {
+		if !strings.Contains(sitemap, "<loc>https://example.com"+want+"</loc>") {
+			t.Errorf("sitemap is missing %s", want)
+		}
+	}
+	for _, gone := range []string{"/404/", "/purchase/", "/purchase/completed/", "/purchase/returned/", "/blog/hidden/"} {
+		if strings.Contains(sitemap, "<loc>https://example.com"+gone+"</loc>") {
+			t.Errorf("sitemap lists %s, which is noindex or has nothing indexable", gone)
+		}
+	}
+}
