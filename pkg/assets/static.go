@@ -55,7 +55,7 @@ func (p *Pipeline) copyStatic(ctx context.Context) error {
 		}
 
 		// Get the first path component (e.g., "css", "js", "images")
-		firstDir := strings.Split(relPath, string(filepath.Separator))[0]
+		firstDir, _, _ := strings.Cut(relPath, string(filepath.Separator))
 
 		// Skip directories we've already processed
 		if skipDirs[firstDir] {

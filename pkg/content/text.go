@@ -6,6 +6,7 @@ package content
 import (
 	"html"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -272,8 +273,8 @@ func closeOpenTags(html string) string {
 
 		if isClosing {
 			// Remove from open tags
-			for i := len(openTags) - 1; i >= 0; i-- {
-				if openTags[i] == tagName {
+			for i, openTag := range slices.Backward(openTags) {
+				if openTag == tagName {
 					openTags = append(openTags[:i], openTags[i+1:]...)
 					break
 				}
@@ -286,9 +287,9 @@ func closeOpenTags(html string) string {
 	// Close open tags in reverse order
 	var result strings.Builder
 	result.WriteString(html)
-	for i := len(openTags) - 1; i >= 0; i-- {
+	for _, openTag := range slices.Backward(openTags) {
 		result.WriteString("</")
-		result.WriteString(openTags[i])
+		result.WriteString(openTag)
 		result.WriteString(">")
 	}
 
