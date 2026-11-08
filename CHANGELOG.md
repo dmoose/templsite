@@ -2,11 +2,29 @@
 
 All notable changes to templsite are documented in this file.
 
-## Unreleased
+## v1.2.0
 
+### Changed
+- templ v0.3.1100. Its runtime moved the attribute helpers to
+  `templ/runtime`: regenerate with v0.3.1100 when you upgrade.
+- **Breaking:** soft-wrapped lines in Markdown join into one paragraph.
+  Two trailing spaces or a backslash still break the line.
+- The sitemap leaves out `noindex: true` pages, and sections whose every
+  page is noindex.
+- Date-only frontmatter is parsed as UTC, so feed timestamps no longer
+  carry the builder's local offset.
 - fastatic scaffold: `theme-init.js` loads before the stylesheets and the
   head declares `color-scheme` (meta + `:root`/`[data-theme]` CSS), so a
   dark-mode first paint can never flash light.
+- fastatic template: page and site name are joined with a hyphen in
+  `<title>` and `og:title`.
+
+### Fixed
+- `watch`: a data race between the debounce timer and the event loop.
+
+### Development
+- `make ci` runs what the workflow runs: templ at the go.mod pin, race
+  tests, lint and the `go fix` check.
 
 ## v1.1.0 — Reproducible Builds
 
