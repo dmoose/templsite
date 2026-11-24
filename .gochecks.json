@@ -1,0 +1,4 @@
+{
+  "test": true,
+  "test_timeout": "60s"
+}

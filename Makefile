@@ -1,4 +1,4 @@
-.PHONY: help build test clean install dev setup deps setup-tailwind generate lint fmt fix ci
+.PHONY: help build test clean install dev setup deps setup-tailwind generate lint fmt fix ci gochecks check
 
 # templsite is a self-contained module. When this checkout sits inside a
 # parent go.work that doesn't list it (e.g. the fastatic monorepo),
@@ -84,8 +84,7 @@ setup: deps setup-tailwind ## Complete project setup
 
 generate: ## Generate templ components
 	@echo "Generating templ components..."
-	@command -v templ >/dev/null 2>&1 || { echo "Installing templ CLI..."; $(GOINSTALL) github.com/a-h/templ/cmd/templ@latest; }
-	@templ generate -path ./components
+	@$(GOCMD) tool templ generate -path ./components
 	@echo "✓ Components generated"
 
 build: deps generate ## Build the binary
@@ -134,15 +133,18 @@ example: build setup-tailwind ## Create and serve example site
 	@echo "Starting example site..."
 	@cd example && ../$(BINARY_PATH) serve
 
+gochecks: ## Run gochecks over every Go file in the tree
+	gochecks check --no-apply --text $$(git ls-files -co --exclude-standard '*.go')
+
+check: gochecks test ## gochecks and tests
+
 lint: ## Run linters (includes vet + formatting checks)
 	@echo "Running linters..."
 	@command -v golangci-lint >/dev/null 2>&1 || { echo "golangci-lint not installed. Install from: https://golangci-lint.run/welcome/install/"; exit 1; }
 	golangci-lint run ./...
 
 ci: ## Exactly what GitHub CI runs — the pre-push gate (also wired as .git/hooks/pre-push)
-	@version=$$(go list -m -f '{{.Version}}' github.com/a-h/templ); \
-		echo "templ $$version (pinned by go.mod)"; \
-		go run "github.com/a-h/templ/cmd/templ@$$version" generate -path ./components
+	go tool templ generate -path ./components
 	go build ./...
 	go test -race ./...
 	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest run --timeout=5m

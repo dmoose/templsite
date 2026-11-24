@@ -2,6 +2,19 @@
 
 All notable changes to templsite are documented in this file.
 
+## v1.3.0
+
+### Changed
+- templ v0.3.1118: regenerate with v0.3.1118 when you upgrade.
+- chroma v2.27.0: finer YAML highlighting, and `chroma.css` gains the
+  `.or` class.
+- goldmark v1.8.7, minify v2.25.0.
+
+### Development
+- templ is a `tool` in go.mod; `make generate` and `make ci` run
+  `go tool templ` at that version.
+- `make check` runs gochecks and the tests.
+
 ## v1.2.0
 
 ### Changed
