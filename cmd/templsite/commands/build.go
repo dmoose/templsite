@@ -11,8 +11,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/dmoose/templsite/pkg/site"
 	"github.com/spf13/cobra"
+
+	"github.com/dmoose/templsite/pkg/site"
 )
 
 // NewBuildCmd creates the "build" command
@@ -35,7 +36,7 @@ func NewBuildCmd(ctx context.Context) *cobra.Command {
   templsite build --output dist --verbose
   templsite build --clean`,
 		Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			return runBuild(ctx, configPath, env, outputDir, verbose, clean)
 		},
 	}
@@ -122,6 +123,9 @@ func runBuild(ctx context.Context, configPath, env, outputDir string, verbose, c
 	fmt.Printf("  Pages: %d\n", stats.Pages)
 	fmt.Printf("  Assets: %d\n", stats.Assets)
 	fmt.Printf("  Total files: %d\n", stats.TotalFiles)
+	if stats.Unreadable > 0 {
+		fmt.Printf("  Incomplete: %d output entries could not be read\n", stats.Unreadable)
+	}
 	fmt.Printf("  Total size: %s\n", formatBytes(stats.TotalSize))
 	fmt.Printf("  Output: %s\n", absOutputPath)
 	fmt.Println()
@@ -135,6 +139,7 @@ type BuildStats struct {
 	Assets     int
 	TotalFiles int
 	TotalSize  int64
+	Unreadable int // entries the count skipped because they could not be read
 }
 
 // getBuildStats collects statistics about the build output
@@ -146,7 +151,11 @@ func getBuildStats(s *site.Site, outputPath string) BuildStats {
 	// Walk output directory to count files and sizes
 	_ = filepath.Walk(outputPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return nil // Skip errors
+			// The summary says the count is incomplete; the build itself
+			// already succeeded.
+			stats.Unreadable++
+			slog.Warn("build summary: cannot read output entry", "path", path, "error", err)
+			return nil
 		}
 		if info.IsDir() {
 			return nil

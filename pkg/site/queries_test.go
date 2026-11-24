@@ -16,7 +16,7 @@ func TestRegularPages(t *testing.T) {
 
 	// Create blog section with posts
 	blogDir := filepath.Join(contentDir, "blog")
-	if err := os.MkdirAll(blogDir, 0755); err != nil {
+	if err := os.MkdirAll(blogDir, 0o755); err != nil {
 		t.Fatalf("failed to create blog dir: %v", err)
 	}
 
@@ -45,10 +45,10 @@ Draft content`,
 	for path, content := range files {
 		fullPath := filepath.Join(tmpDir, path)
 		dir := filepath.Dir(fullPath)
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatalf("failed to create dir: %v", err)
 		}
-		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
 			t.Fatalf("failed to write file: %v", err)
 		}
 	}
@@ -82,7 +82,7 @@ func TestPagesInSection(t *testing.T) {
 
 	// Create blog and docs sections
 	for _, dir := range []string{"blog", "docs"} {
-		if err := os.MkdirAll(filepath.Join(contentDir, dir), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(contentDir, dir), 0o755); err != nil {
 			t.Fatalf("failed to create %s dir: %v", dir, err)
 		}
 	}
@@ -104,7 +104,7 @@ Content`,
 
 	for path, content := range files {
 		fullPath := filepath.Join(tmpDir, path)
-		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
 			t.Fatalf("failed to write file: %v", err)
 		}
 	}
@@ -139,7 +139,7 @@ Content`,
 func TestGetSection(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content", "blog")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
@@ -157,7 +157,7 @@ Content`,
 
 	for path, content := range files {
 		fullPath := filepath.Join(tmpDir, path)
-		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
 			t.Fatalf("failed to write file: %v", err)
 		}
 	}
@@ -193,13 +193,13 @@ func TestAllSections(t *testing.T) {
 
 	// Create multiple sections
 	for _, dir := range []string{"blog", "docs", "projects"} {
-		if err := os.MkdirAll(filepath.Join(tmpDir, "content", dir), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(tmpDir, "content", dir), 0o755); err != nil {
 			t.Fatalf("failed to create %s dir: %v", dir, err)
 		}
 		// Add a page to each section
 		path := filepath.Join(tmpDir, "content", dir, "page.md")
 		content := "---\ntitle: \"Page\"\n---\nContent"
-		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 			t.Fatalf("failed to write file: %v", err)
 		}
 	}
@@ -221,14 +221,14 @@ func TestAllSections(t *testing.T) {
 func TestPageByURL(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content", "blog")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
 	if err := os.WriteFile(
 		filepath.Join(contentDir, "my-post.md"),
 		[]byte("---\ntitle: \"My Post\"\n---\nContent"),
-		0644,
+		0o644,
 	); err != nil {
 		t.Fatalf("failed to write file: %v", err)
 	}
@@ -271,7 +271,7 @@ func TestPageByURL(t *testing.T) {
 func TestPagesByTag(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content", "blog")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
@@ -294,7 +294,7 @@ Content`,
 	}
 
 	for name, content := range files {
-		if err := os.WriteFile(filepath.Join(contentDir, name), []byte(content), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(contentDir, name), []byte(content), 0o644); err != nil {
 			t.Fatalf("failed to write file: %v", err)
 		}
 	}
@@ -329,7 +329,7 @@ Content`,
 func TestAllTags(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content", "blog")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
@@ -347,7 +347,7 @@ Content`,
 	}
 
 	for name, content := range files {
-		if err := os.WriteFile(filepath.Join(contentDir, name), []byte(content), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(contentDir, name), []byte(content), 0o644); err != nil {
 			t.Fatalf("failed to write file: %v", err)
 		}
 	}

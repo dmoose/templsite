@@ -39,7 +39,7 @@ Go module name and directory name.`,
   templsite new mysite --template fastatic
   templsite new mysite --template tailwind --templsite-path ../templsite`,
 		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			return runNew(ctx, args[0], templateName, verbose, templsitePath)
 		},
 	}
@@ -109,13 +109,13 @@ func runNew(ctx context.Context, sitePath, templateName string, verbose bool, te
 	slog.Info("initializing Go module", "module", moduleName)
 
 	// Initialize Go module
-	if err := runCommand(ctx, sitePath, "go", "mod", "init", moduleName); err != nil {
+	if err := runGo(ctx, sitePath, "mod", "init", moduleName); err != nil {
 		slog.Warn("go mod init failed, continuing anyway", "error", err)
 	}
 
 	// templ as a tool with no version of its own: tidy resolves it to the
 	// templ templsite requires, and `go tool templ` builds that version.
-	if err := runCommand(ctx, sitePath, "go", "mod", "edit", "-tool=github.com/a-h/templ/cmd/templ"); err != nil {
+	if err := runGo(ctx, sitePath, "mod", "edit", "-tool=github.com/a-h/templ/cmd/templ"); err != nil {
 		return fmt.Errorf("adding templ as a tool: %w", err)
 	}
 
@@ -138,23 +138,23 @@ func runNew(ctx context.Context, sitePath, templateName string, verbose bool, te
 		// Append replace directive
 		replaceDirective := fmt.Sprintf("\n// Local development - remove for production\nreplace github.com/dmoose/templsite => %s\n", absTemplsitePath)
 		goModContent = append(goModContent, []byte(replaceDirective)...)
-		if err := os.WriteFile(goModPath, goModContent, 0o644); err != nil {
+		if err := os.WriteFile(goModPath, goModContent, 0o644); err != nil { //nolint:gosec // the site path is the CLI argument
 			return fmt.Errorf("writing go.mod with replace directive: %w", err)
 		}
 
 		// Resolve templsite, and through it templ, before generating
 		slog.Info("downloading dependencies")
-		if err := runCommand(ctx, sitePath, "go", "mod", "tidy"); err != nil {
+		if err := runGo(ctx, sitePath, "mod", "tidy"); err != nil {
 			slog.Warn("go mod tidy failed", "error", err)
 		}
 
 		slog.Info("generating templ components")
-		if err := runCommand(ctx, sitePath, "go", "tool", "templ", "generate"); err != nil {
+		if err := runGo(ctx, sitePath, "tool", "templ", "generate"); err != nil {
 			slog.Warn("templ generate failed", "error", err)
 		}
 
 		// The generated code imports templ directly
-		if err := runCommand(ctx, sitePath, "go", "mod", "tidy"); err != nil {
+		if err := runGo(ctx, sitePath, "mod", "tidy"); err != nil {
 			slog.Warn("go mod tidy failed", "error", err)
 		}
 	} else {
@@ -265,9 +265,9 @@ func copyFSWithTemplates(sourceFS fs.FS, sourcePath, destPath string, data map[s
 	})
 }
 
-// runCommand runs a command in a specific directory
-func runCommand(ctx context.Context, dir, name string, args ...string) error {
-	cmd := exec.CommandContext(ctx, name, args...)
+// runGo runs a go command in a specific directory
+func runGo(ctx context.Context, dir string, args ...string) error {
+	cmd := exec.CommandContext(ctx, "go", args...)
 	cmd.Dir = dir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

@@ -35,7 +35,7 @@ func TestBuild(t *testing.T) {
 	outputDir := filepath.Join(tmpDir, "public", "assets")
 
 	// Create input directory structure
-	if err := os.MkdirAll(filepath.Join(inputDir, "css"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(inputDir, "css"), 0o755); err != nil {
 		t.Fatalf("failed to create input dir: %v", err)
 	}
 
@@ -46,7 +46,7 @@ func TestBuild(t *testing.T) {
 .test {
   color: red;
 }`
-	if err := os.WriteFile(cssInput, []byte(cssContent), 0644); err != nil {
+	if err := os.WriteFile(cssInput, []byte(cssContent), 0o644); err != nil {
 		t.Fatalf("failed to write CSS file: %v", err)
 	}
 
@@ -74,7 +74,7 @@ func TestBuildWithContext(t *testing.T) {
 	inputDir := filepath.Join(tmpDir, "assets")
 	outputDir := filepath.Join(tmpDir, "public", "assets")
 
-	if err := os.MkdirAll(filepath.Join(inputDir, "css"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(inputDir, "css"), 0o755); err != nil {
 		t.Fatalf("failed to create input dir: %v", err)
 	}
 
@@ -104,7 +104,7 @@ func TestBuildWithoutCSSInput(t *testing.T) {
 	outputDir := filepath.Join(tmpDir, "public", "assets")
 
 	// Create directories but no CSS file
-	if err := os.MkdirAll(inputDir, 0755); err != nil {
+	if err := os.MkdirAll(inputDir, 0o755); err != nil {
 		t.Fatalf("failed to create input dir: %v", err)
 	}
 
@@ -131,7 +131,7 @@ func TestProcessCSSSkipsWhenNoInput(t *testing.T) {
 	outputDir := filepath.Join(tmpDir, "public", "assets")
 
 	// Create directories but no CSS file
-	if err := os.MkdirAll(inputDir, 0755); err != nil {
+	if err := os.MkdirAll(inputDir, 0o755); err != nil {
 		t.Fatalf("failed to create input dir: %v", err)
 	}
 

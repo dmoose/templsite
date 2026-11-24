@@ -29,7 +29,7 @@ assets:
 outputDir: "public"
 `
 
-	if err := os.WriteFile(configPath, []byte(configYAML), 0644); err != nil {
+	if err := os.WriteFile(configPath, []byte(configYAML), 0o644); err != nil {
 		t.Fatalf("failed to write test config: %v", err)
 	}
 
@@ -83,7 +83,7 @@ func TestBuild(t *testing.T) {
 
 	// Create content directory
 	contentDir := filepath.Join(tmpDir, "content")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
@@ -92,7 +92,6 @@ func TestBuild(t *testing.T) {
 
 	ctx := context.Background()
 	err := site.Build(ctx)
-
 	// Build should succeed
 	if err != nil {
 		t.Errorf("Build failed: %v", err)
@@ -115,7 +114,7 @@ func TestBuildWithContext(t *testing.T) {
 
 	// Create content directory
 	contentDir := filepath.Join(tmpDir, "content")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
@@ -138,7 +137,7 @@ func TestBuildSetsTimestamp(t *testing.T) {
 
 	// Create content directory
 	contentDir := filepath.Join(tmpDir, "content")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
@@ -179,7 +178,7 @@ func TestLinkPrevNext(t *testing.T) {
 
 	// Create content directory with blog posts
 	blogDir := filepath.Join(tmpDir, "content", "blog")
-	if err := os.MkdirAll(blogDir, 0755); err != nil {
+	if err := os.MkdirAll(blogDir, 0o755); err != nil {
 		t.Fatalf("failed to create blog dir: %v", err)
 	}
 
@@ -219,14 +218,14 @@ Content`,
 
 	for _, post := range posts {
 		path := filepath.Join(blogDir, post.filename)
-		if err := os.WriteFile(path, []byte(post.content), 0644); err != nil {
+		if err := os.WriteFile(path, []byte(post.content), 0o644); err != nil {
 			t.Fatalf("failed to write post: %v", err)
 		}
 	}
 
 	// Create a root page (different section)
 	rootPage := filepath.Join(contentDir, "about.md")
-	if err := os.WriteFile(rootPage, []byte("---\ntitle: About\n---\nAbout"), 0644); err != nil {
+	if err := os.WriteFile(rootPage, []byte("---\ntitle: About\n---\nAbout"), 0o644); err != nil {
 		t.Fatalf("failed to write root page: %v", err)
 	}
 
@@ -295,22 +294,22 @@ func TestLinkPrevNextAcrossSections(t *testing.T) {
 	// Create two sections
 	blogDir := filepath.Join(tmpDir, "content", "blog")
 	docsDir := filepath.Join(tmpDir, "content", "docs")
-	if err := os.MkdirAll(blogDir, 0755); err != nil {
+	if err := os.MkdirAll(blogDir, 0o755); err != nil {
 		t.Fatalf("failed to create blog dir: %v", err)
 	}
-	if err := os.MkdirAll(docsDir, 0755); err != nil {
+	if err := os.MkdirAll(docsDir, 0o755); err != nil {
 		t.Fatalf("failed to create docs dir: %v", err)
 	}
 
 	// Create posts in blog section
 	blogPost := filepath.Join(blogDir, "post.md")
-	if err := os.WriteFile(blogPost, []byte("---\ntitle: Blog Post\ndate: 2025-01-15\n---\nContent"), 0644); err != nil {
+	if err := os.WriteFile(blogPost, []byte("---\ntitle: Blog Post\ndate: 2025-01-15\n---\nContent"), 0o644); err != nil {
 		t.Fatalf("failed to write blog post: %v", err)
 	}
 
 	// Create pages in docs section
 	docsPage := filepath.Join(docsDir, "intro.md")
-	if err := os.WriteFile(docsPage, []byte("---\ntitle: Docs Intro\ndate: 2025-01-10\n---\nContent"), 0644); err != nil {
+	if err := os.WriteFile(docsPage, []byte("---\ntitle: Docs Intro\ndate: 2025-01-10\n---\nContent"), 0o644); err != nil {
 		t.Fatalf("failed to write docs page: %v", err)
 	}
 

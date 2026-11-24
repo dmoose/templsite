@@ -159,15 +159,15 @@ assets:
   outputDir: "assets"
 outputDir: "public"
 `
-	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+	if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
 		t.Fatalf("failed to write config: %v", err)
 	}
 
 	// Create required directories
-	if err := os.MkdirAll(filepath.Join(tmpDir, "content"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(tmpDir, "content"), 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(tmpDir, "assets"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(tmpDir, "assets"), 0o755); err != nil {
 		t.Fatalf("failed to create assets dir: %v", err)
 	}
 
@@ -179,7 +179,7 @@ outputDir: "public"
 	s.SetBaseDir(tmpDir)
 
 	// Create server
-	renderFunc := func(ctx context.Context, s *site.Site) error {
+	renderFunc := func(_ context.Context, _ *site.Site) error {
 		return nil
 	}
 
@@ -218,38 +218,38 @@ func TestServerHandleRequest(t *testing.T) {
 baseURL: "http://localhost:8080"
 outputDir: "public"
 `
-	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+	if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
 		t.Fatalf("failed to write config: %v", err)
 	}
 
 	// Create public directory with test files
 	publicDir := filepath.Join(tmpDir, "public")
-	if err := os.MkdirAll(publicDir, 0755); err != nil {
+	if err := os.MkdirAll(publicDir, 0o755); err != nil {
 		t.Fatalf("failed to create public dir: %v", err)
 	}
 
 	// Create index.html
 	indexContent := "<html><body>Hello World</body></html>"
-	if err := os.WriteFile(filepath.Join(publicDir, "index.html"), []byte(indexContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(publicDir, "index.html"), []byte(indexContent), 0o644); err != nil {
 		t.Fatalf("failed to write index.html: %v", err)
 	}
 
 	// Create about/index.html for clean URL test
 	aboutDir := filepath.Join(publicDir, "about")
-	if err := os.MkdirAll(aboutDir, 0755); err != nil {
+	if err := os.MkdirAll(aboutDir, 0o755); err != nil {
 		t.Fatalf("failed to create about dir: %v", err)
 	}
 	aboutContent := "<html><body>About Page</body></html>"
-	if err := os.WriteFile(filepath.Join(aboutDir, "index.html"), []byte(aboutContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(aboutDir, "index.html"), []byte(aboutContent), 0o644); err != nil {
 		t.Fatalf("failed to write about/index.html: %v", err)
 	}
 
 	// Create CSS file
 	cssDir := filepath.Join(publicDir, "assets", "css")
-	if err := os.MkdirAll(cssDir, 0755); err != nil {
+	if err := os.MkdirAll(cssDir, 0o755); err != nil {
 		t.Fatalf("failed to create css dir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(cssDir, "main.css"), []byte("body { color: black; }"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(cssDir, "main.css"), []byte("body { color: black; }"), 0o644); err != nil {
 		t.Fatalf("failed to write main.css: %v", err)
 	}
 
@@ -261,7 +261,7 @@ outputDir: "public"
 	s.SetBaseDir(tmpDir)
 
 	// Create server
-	renderFunc := func(ctx context.Context, s *site.Site) error {
+	renderFunc := func(_ context.Context, _ *site.Site) error {
 		return nil
 	}
 
@@ -345,17 +345,17 @@ func TestServerLiveReloadInjection(t *testing.T) {
 baseURL: "http://localhost:8080"
 outputDir: "public"
 `
-	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+	if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
 		t.Fatalf("failed to write config: %v", err)
 	}
 
 	// Create public directory with HTML file containing </body>
 	publicDir := filepath.Join(tmpDir, "public")
-	if err := os.MkdirAll(publicDir, 0755); err != nil {
+	if err := os.MkdirAll(publicDir, 0o755); err != nil {
 		t.Fatalf("failed to create public dir: %v", err)
 	}
 	htmlContent := "<html><body>Test</body></html>"
-	if err := os.WriteFile(filepath.Join(publicDir, "index.html"), []byte(htmlContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(publicDir, "index.html"), []byte(htmlContent), 0o644); err != nil {
 		t.Fatalf("failed to write index.html: %v", err)
 	}
 
@@ -367,7 +367,7 @@ outputDir: "public"
 	s.SetBaseDir(tmpDir)
 
 	// Create server
-	renderFunc := func(ctx context.Context, s *site.Site) error {
+	renderFunc := func(_ context.Context, _ *site.Site) error {
 		return nil
 	}
 
@@ -407,16 +407,16 @@ func TestServerCacheHeaders(t *testing.T) {
 baseURL: "http://localhost:8080"
 outputDir: "public"
 `
-	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+	if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
 		t.Fatalf("failed to write config: %v", err)
 	}
 
 	// Create public directory with file
 	publicDir := filepath.Join(tmpDir, "public")
-	if err := os.MkdirAll(publicDir, 0755); err != nil {
+	if err := os.MkdirAll(publicDir, 0o755); err != nil {
 		t.Fatalf("failed to create public dir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(publicDir, "index.html"), []byte("<html></html>"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(publicDir, "index.html"), []byte("<html></html>"), 0o644); err != nil {
 		t.Fatalf("failed to write index.html: %v", err)
 	}
 
@@ -428,7 +428,7 @@ outputDir: "public"
 	s.SetBaseDir(tmpDir)
 
 	// Create server
-	renderFunc := func(ctx context.Context, s *site.Site) error {
+	renderFunc := func(_ context.Context, _ *site.Site) error {
 		return nil
 	}
 

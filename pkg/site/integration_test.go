@@ -26,13 +26,13 @@ func TestIntegrationFullBuild(t *testing.T) {
 	assetsCSSDir := filepath.Join(assetsDir, "css")
 	assetsJSDir := filepath.Join(assetsDir, "js")
 
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
-	if err := os.MkdirAll(assetsCSSDir, 0755); err != nil {
+	if err := os.MkdirAll(assetsCSSDir, 0o755); err != nil {
 		t.Fatalf("failed to create css dir: %v", err)
 	}
-	if err := os.MkdirAll(assetsJSDir, 0755); err != nil {
+	if err := os.MkdirAll(assetsJSDir, 0o755); err != nil {
 		t.Fatalf("failed to create js dir: %v", err)
 	}
 
@@ -46,7 +46,7 @@ description: "Welcome to our site"
 
 This is the home page.
 `
-	if err := os.WriteFile(filepath.Join(contentDir, "index.md"), []byte(indexContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(contentDir, "index.md"), []byte(indexContent), 0o644); err != nil {
 		t.Fatalf("failed to write index.md: %v", err)
 	}
 
@@ -60,13 +60,13 @@ layout: "page"
 
 We build great software.
 `
-	if err := os.WriteFile(filepath.Join(contentDir, "about.md"), []byte(aboutContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(contentDir, "about.md"), []byte(aboutContent), 0o644); err != nil {
 		t.Fatalf("failed to write about.md: %v", err)
 	}
 
 	// Create blog directory and post
 	blogDir := filepath.Join(contentDir, "blog")
-	if err := os.MkdirAll(blogDir, 0755); err != nil {
+	if err := os.MkdirAll(blogDir, 0o755); err != nil {
 		t.Fatalf("failed to create blog dir: %v", err)
 	}
 
@@ -80,7 +80,7 @@ date: 2025-01-15
 
 This is our first blog post.
 `
-	if err := os.WriteFile(filepath.Join(blogDir, "first-post.md"), []byte(blogContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(blogDir, "first-post.md"), []byte(blogContent), 0o644); err != nil {
 		t.Fatalf("failed to write blog post: %v", err)
 	}
 
@@ -91,7 +91,7 @@ body {
   font-family: sans-serif;
 }
 `
-	if err := os.WriteFile(filepath.Join(assetsCSSDir, "app.css"), []byte(cssContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(assetsCSSDir, "app.css"), []byte(cssContent), 0o644); err != nil {
 		t.Fatalf("failed to write css: %v", err)
 	}
 
@@ -104,7 +104,7 @@ function init() {
 
 init();
 `
-	if err := os.WriteFile(filepath.Join(assetsJSDir, "app.js"), []byte(jsContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(assetsJSDir, "app.js"), []byte(jsContent), 0o644); err != nil {
 		t.Fatalf("failed to write js: %v", err)
 	}
 
@@ -220,10 +220,10 @@ func TestIntegrationBuildWithMinification(t *testing.T) {
 	// Setup directories
 	contentDir := filepath.Join(tmpDir, "content")
 	assetsDir := filepath.Join(tmpDir, "assets")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(assetsDir, "js"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(assetsDir, "js"), 0o755); err != nil {
 		t.Fatalf("failed to create js dir: %v", err)
 	}
 
@@ -233,7 +233,7 @@ title: "Test"
 ---
 # Test
 `
-	if err := os.WriteFile(filepath.Join(contentDir, "index.md"), []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(contentDir, "index.md"), []byte(content), 0o644); err != nil {
 		t.Fatalf("failed to write content: %v", err)
 	}
 
@@ -248,7 +248,7 @@ function hello() {
 // Another comment
 hello();
 `
-	if err := os.WriteFile(filepath.Join(assetsDir, "js", "app.js"), []byte(js), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(assetsDir, "js", "app.js"), []byte(js), 0o644); err != nil {
 		t.Fatalf("failed to write js: %v", err)
 	}
 

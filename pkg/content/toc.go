@@ -116,7 +116,7 @@ func renderTOC(entries []*TOCEntry, tocID string) string {
 	}
 
 	var buf strings.Builder
-	renderTOCLevel(&buf, entries, entries[0].Level, tocID)
+	renderTOCLevel(&buf, entries, tocID)
 	return buf.String()
 }
 
@@ -124,7 +124,7 @@ func renderTOC(entries []*TOCEntry, tocID string) string {
 // Output uses CSS classes: toc-list on <ul>, toc-item/toc-item-h{N} on <li>,
 // toc-link on <a>. Data attributes data-tui-toc-link/data-tui-toc-href/data-tui-toc-id
 // support IntersectionObserver-based scroll-spy.
-func renderTOCLevel(buf *strings.Builder, entries []*TOCEntry, baseLevel int, tocID string) {
+func renderTOCLevel(buf *strings.Builder, entries []*TOCEntry, tocID string) {
 	if len(entries) == 0 {
 		return
 	}
@@ -152,7 +152,7 @@ func renderTOCLevel(buf *strings.Builder, entries []*TOCEntry, baseLevel int, to
 
 		if len(children) > 0 {
 			buf.WriteString("\n")
-			renderTOCLevel(buf, children, entry.Level+1, tocID)
+			renderTOCLevel(buf, children, tocID)
 		}
 
 		buf.WriteString("</li>\n")

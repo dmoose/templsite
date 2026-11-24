@@ -68,7 +68,7 @@ func (p *Pipeline) copyStatic(ctx context.Context) error {
 		// If it's a directory, create it in the output
 		if d.IsDir() {
 			outPath := filepath.Join(p.config.OutputDir, relPath)
-			if err := os.MkdirAll(outPath, 0755); err != nil {
+			if err := os.MkdirAll(outPath, 0o755); err != nil {
 				return fmt.Errorf("creating directory %s: %w", outPath, err)
 			}
 			return nil
@@ -84,7 +84,6 @@ func (p *Pipeline) copyStatic(ctx context.Context) error {
 		slog.Debug("copied static file", "from", path, "to", outPath)
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}
@@ -112,7 +111,7 @@ func copyFile(src, dst string) error {
 	}
 
 	// Create destination directory if needed
-	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
 		return fmt.Errorf("creating destination directory: %w", err)
 	}
 

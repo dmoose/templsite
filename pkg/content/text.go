@@ -206,7 +206,7 @@ func mapPlainPosToHTML(html string, plainPos int) int {
 	plainCount := 0
 	inTag := false
 
-	for i := 0; i < len(html); i++ {
+	for i := range len(html) {
 		switch {
 		case html[i] == '<':
 			inTag = true

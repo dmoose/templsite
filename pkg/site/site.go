@@ -6,7 +6,9 @@ package site
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -104,7 +106,9 @@ func (s *Site) Build(ctx context.Context) error {
 	}
 
 	// Compute asset version hash for cache-busting
-	s.computeAssetVersion()
+	if err := s.computeAssetVersion(); err != nil {
+		return err
+	}
 
 	// Write auto-generated files (robots.txt, sitemap.xml, site.webmanifest, feed.xml, llms.txt)
 	s.writeGeneratedFiles()
@@ -437,9 +441,12 @@ func (s *Site) copyStaticFiles() error {
 	outputDir := s.OutputDir()
 
 	info, err := os.Stat(staticPath)
-	if err != nil || !info.IsDir() {
+	if errors.Is(err, fs.ErrNotExist) || (err == nil && !info.IsDir()) {
 		slog.Debug("no static directory found, skipping", "path", staticPath)
 		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("reading static directory: %w", err)
 	}
 
 	count := 0
@@ -459,7 +466,7 @@ func (s *Site) copyStaticFiles() error {
 			return os.MkdirAll(destPath, 0o755)
 		}
 
-		src, err := os.Open(path)
+		src, err := os.Open(path) //nolint:gosec // the site's own static files; symlinks out of the tree are allowed
 		if err != nil {
 			return fmt.Errorf("opening %s: %w", path, err)
 		}
@@ -491,24 +498,36 @@ func (s *Site) copyStaticFiles() error {
 
 // computeAssetVersion walks the output assets directory and computes a SHA256 hash
 // of all file contents, storing the first 8 hex chars as the asset version.
-func (s *Site) computeAssetVersion() {
-	assetsOutputPath := s.Config.AssetsOutputPath(s.baseDir)
-
+// No assets directory hashes as empty; an asset that cannot be read fails.
+func (s *Site) computeAssetVersion() error {
 	h := sha256.New()
-	_ = filepath.WalkDir(assetsOutputPath, func(path string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
-			return err
-		}
-		data, err := os.ReadFile(path)
+	root, err := os.OpenRoot(s.Config.AssetsOutputPath(s.baseDir))
+	switch {
+	case errors.Is(err, fs.ErrNotExist):
+	case err != nil:
+		return fmt.Errorf("computing asset version: %w", err)
+	default:
+		defer func() { _ = root.Close() }()
+		assets := root.FS()
+		err := fs.WalkDir(assets, ".", func(path string, d fs.DirEntry, err error) error {
+			if err != nil || d.IsDir() {
+				return err
+			}
+			data, err := fs.ReadFile(assets, path)
+			if err != nil {
+				return err
+			}
+			h.Write(data)
+			return nil
+		})
 		if err != nil {
-			return nil // skip unreadable files
+			return fmt.Errorf("computing asset version: %w", err)
 		}
-		h.Write(data)
-		return nil
-	})
+	}
 
-	s.AssetVersion = fmt.Sprintf("%x", h.Sum(nil))[:8]
+	s.AssetVersion = hex.EncodeToString(h.Sum(nil))[:8]
 	slog.Debug("asset version computed", "version", s.AssetVersion)
+	return nil
 }
 
 // writeGeneratedFiles writes robots.txt, sitemap.xml, site.webmanifest, feed.xml,

@@ -117,7 +117,6 @@ func (p *Parser) ParseAll(ctx context.Context) ([]*Page, error) {
 		pages = append(pages, page)
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +125,7 @@ func (p *Parser) ParseAll(ctx context.Context) ([]*Page, error) {
 }
 
 // ParseFile parses a single Markdown file
-func (p *Parser) ParseFile(ctx context.Context, path string) (*Page, error) {
+func (p *Parser) ParseFile(_ context.Context, path string) (*Page, error) {
 	// Read file content
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -371,7 +370,7 @@ func parseDate(dateStr string) (time.Time, error) {
 // to links pointing to external URLs (http:// or https://).
 type externalLinkTransformer struct{}
 
-func (t *externalLinkTransformer) Transform(node *ast.Document, reader text.Reader, pc parser.Context) {
+func (t *externalLinkTransformer) Transform(node *ast.Document, _ text.Reader, _ parser.Context) {
 	_ = ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
 			return ast.WalkContinue, nil

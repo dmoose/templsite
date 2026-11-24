@@ -4,6 +4,7 @@
 package site
 
 import (
+	"errors"
 	"fmt"
 	"maps"
 	"os"
@@ -337,31 +338,31 @@ func LoadConfigOrDefault(path string) (*Config, error) {
 // Validate checks if the configuration is valid
 func (c *Config) Validate() error {
 	if c.Title == "" {
-		return fmt.Errorf("title is required")
+		return errors.New("title is required")
 	}
 
 	if c.BaseURL == "" {
-		return fmt.Errorf("baseURL is required")
+		return errors.New("baseURL is required")
 	}
 
 	if c.Content.Dir == "" {
-		return fmt.Errorf("content.dir is required")
+		return errors.New("content.dir is required")
 	}
 
 	if c.Content.DefaultLayout == "" {
-		return fmt.Errorf("content.defaultLayout is required")
+		return errors.New("content.defaultLayout is required")
 	}
 
 	if c.Assets.InputDir == "" {
-		return fmt.Errorf("assets.inputDir is required")
+		return errors.New("assets.inputDir is required")
 	}
 
 	if c.Assets.OutputDir == "" {
-		return fmt.Errorf("assets.outputDir is required")
+		return errors.New("assets.outputDir is required")
 	}
 
 	if c.OutputDir == "" {
-		return fmt.Errorf("outputDir is required")
+		return errors.New("outputDir is required")
 	}
 
 	return nil
@@ -371,7 +372,7 @@ func (c *Config) Validate() error {
 func (c *Config) Save(path string) error {
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("creating config directory: %w", err)
 	}
 
@@ -382,7 +383,7 @@ func (c *Config) Save(path string) error {
 	}
 
 	// Write file
-	if err := os.WriteFile(path, data, 0644); err != nil {
+	if err := os.WriteFile(path, data, 0o644); err != nil {
 		return fmt.Errorf("writing config file: %w", err)
 	}
 

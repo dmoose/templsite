@@ -162,7 +162,7 @@ func TestGenerateURL(t *testing.T) {
 func TestParseFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
@@ -189,7 +189,7 @@ This is a **test** page with some content.
 - List item 2
 `
 
-	if err := os.WriteFile(testFile, []byte(testContent), 0644); err != nil {
+	if err := os.WriteFile(testFile, []byte(testContent), 0o644); err != nil {
 		t.Fatalf("failed to write test file: %v", err)
 	}
 
@@ -254,7 +254,7 @@ This is a **test** page with some content.
 func TestParseAll(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
@@ -282,17 +282,17 @@ draft: true
 	for path, content := range files {
 		fullPath := filepath.Join(contentDir, path)
 		dir := filepath.Dir(fullPath)
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatalf("failed to create dir: %v", err)
 		}
-		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
 			t.Fatalf("failed to write file: %v", err)
 		}
 	}
 
 	// Create a non-markdown file (should be ignored)
 	nonMdFile := filepath.Join(contentDir, "readme.txt")
-	if err := os.WriteFile(nonMdFile, []byte("not markdown"), 0644); err != nil {
+	if err := os.WriteFile(nonMdFile, []byte("not markdown"), 0o644); err != nil {
 		t.Fatalf("failed to write non-md file: %v", err)
 	}
 
@@ -323,13 +323,13 @@ draft: true
 func TestParseAllWithContext(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
 	// Create a test file
 	testFile := filepath.Join(contentDir, "test.md")
-	if err := os.WriteFile(testFile, []byte("# Test"), 0644); err != nil {
+	if err := os.WriteFile(testFile, []byte("# Test"), 0o644); err != nil {
 		t.Fatalf("failed to write test file: %v", err)
 	}
 
@@ -559,7 +559,7 @@ func TestPageHasTag(t *testing.T) {
 func TestMarkdownRendering(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
@@ -577,7 +577,7 @@ This is a paragraph with **bold** and *italic* text.
 
 ` + "```go\nfunc main() {\n}\n```"
 
-	if err := os.WriteFile(testFile, []byte(testContent), 0644); err != nil {
+	if err := os.WriteFile(testFile, []byte(testContent), 0o644); err != nil {
 		t.Fatalf("failed to write test file: %v", err)
 	}
 
@@ -614,12 +614,12 @@ This is a paragraph with **bold** and *italic* text.
 // flowing paragraph. Two trailing spaces or a backslash still break.
 func TestSoftWrapsJoinParagraphs(t *testing.T) {
 	contentDir := filepath.Join(t.TempDir(), "content")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	testFile := filepath.Join(contentDir, "wrap.md")
 	body := "One sentence wrapped\nat the column.\n\nForced with spaces  \nnext.\n\nForced with a backslash\\\nnext.\n"
-	if err := os.WriteFile(testFile, []byte(body), 0644); err != nil {
+	if err := os.WriteFile(testFile, []byte(body), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	page, err := NewParser(contentDir).ParseFile(context.Background(), testFile)
@@ -685,7 +685,7 @@ func TestExtractSection(t *testing.T) {
 func TestParseFileNewFields(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content", "blog")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
@@ -710,7 +710,7 @@ This is the second paragraph with more details that should not appear in the sum
 And even more content here with many words to test word counting thoroughly.
 `
 
-	if err := os.WriteFile(testFile, []byte(testContent), 0644); err != nil {
+	if err := os.WriteFile(testFile, []byte(testContent), 0o644); err != nil {
 		t.Fatalf("failed to write test file: %v", err)
 	}
 

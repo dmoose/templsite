@@ -9,9 +9,10 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/dmoose/templsite/pkg/server"
 	"github.com/dmoose/templsite/pkg/site"
-	"github.com/spf13/cobra"
 )
 
 // NewServeCmd creates the "serve" command
@@ -35,7 +36,7 @@ automatically rebuilds the site and refreshes the browser.`,
   templsite serve --config site.yaml --verbose
   templsite serve --addr 0.0.0.0:8080`,
 		Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			return runServe(ctx, configPath, env, port, addr, verbose)
 		},
 	}
@@ -78,7 +79,7 @@ func runServe(ctx context.Context, configPath, env string, port int, addr string
 
 	// Create development server with noop render function
 	// (templsite serve is for existing projects that handle their own rendering)
-	noopRender := func(ctx context.Context, s *site.Site) error {
+	noopRender := func(_ context.Context, _ *site.Site) error {
 		return nil // User's site binary handles rendering
 	}
 	srv, err := server.New(s, serverAddr, noopRender)

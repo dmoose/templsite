@@ -111,6 +111,10 @@ func TestAtom(t *testing.T) {
 		t.Error("Atom should have Atom namespace")
 	}
 
+	if !strings.Contains(atom, "<subtitle>A great blog</subtitle>") {
+		t.Error("Atom should carry the subtitle it was given")
+	}
+
 	// Check required elements
 	if !strings.Contains(atom, "<title>My Blog</title>") {
 		t.Error("Atom should contain feed title")

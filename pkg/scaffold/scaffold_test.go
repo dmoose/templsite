@@ -53,7 +53,7 @@ func TestSlugToTitle(t *testing.T) {
 func TestNewContentWithBuiltInArchetype(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
@@ -85,7 +85,7 @@ func TestNewContentWithBuiltInArchetype(t *testing.T) {
 func TestNewContentPostsBuiltIn(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
@@ -124,10 +124,10 @@ func TestNewContentWithCustomArchetype(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content")
 	archetypesDir := filepath.Join(tmpDir, "archetypes")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
-	if err := os.MkdirAll(archetypesDir, 0755); err != nil {
+	if err := os.MkdirAll(archetypesDir, 0o755); err != nil {
 		t.Fatalf("failed to create archetypes dir: %v", err)
 	}
 
@@ -138,7 +138,7 @@ slug: {{.Slug}}
 custom: true
 ---
 `
-	if err := os.WriteFile(filepath.Join(archetypesDir, "docs.md"), []byte(archetype), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(archetypesDir, "docs.md"), []byte(archetype), 0o644); err != nil {
 		t.Fatalf("failed to write archetype: %v", err)
 	}
 
@@ -197,10 +197,10 @@ func TestNewContentCreatesDirectories(t *testing.T) {
 func TestNewContentRefusesOverwrite(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(contentDir, "about.md"), []byte("existing"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(contentDir, "about.md"), []byte("existing"), 0o644); err != nil {
 		t.Fatalf("failed to write existing file: %v", err)
 	}
 
@@ -223,10 +223,10 @@ func TestNewContentDefaultArchetypeFallback(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content")
 	archetypesDir := filepath.Join(tmpDir, "archetypes")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
-	if err := os.MkdirAll(archetypesDir, 0755); err != nil {
+	if err := os.MkdirAll(archetypesDir, 0o755); err != nil {
 		t.Fatalf("failed to create archetypes dir: %v", err)
 	}
 
@@ -236,7 +236,7 @@ title: "{{.Title}}"
 layout: "default"
 ---
 `
-	if err := os.WriteFile(filepath.Join(archetypesDir, "default.md"), []byte(defaultArchetype), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(archetypesDir, "default.md"), []byte(defaultArchetype), 0o644); err != nil {
 		t.Fatalf("failed to write default archetype: %v", err)
 	}
 

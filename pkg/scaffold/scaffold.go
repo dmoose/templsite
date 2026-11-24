@@ -69,12 +69,12 @@ func NewContent(opts NewContentOptions) (string, error) {
 	}
 
 	// Create parent directories
-	if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(outputPath), 0o755); err != nil {
 		return "", fmt.Errorf("creating directories: %w", err)
 	}
 
 	// Write file
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(outputPath, buf.Bytes(), 0o644); err != nil {
 		return "", fmt.Errorf("writing file: %w", err)
 	}
 

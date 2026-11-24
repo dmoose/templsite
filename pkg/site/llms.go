@@ -12,8 +12,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/dmoose/templsite/pkg/content"
 	"gopkg.in/yaml.v3"
+
+	"github.com/dmoose/templsite/pkg/content"
 )
 
 // LLMsTxt generates the /llms.txt index file following the llms.txt specification.
@@ -240,7 +241,7 @@ func CompanionMarkdown(s *Site, p *content.Page) string {
 			b.WriteString(key)
 			b.WriteString("\n\n")
 			b.WriteString("```yaml\n")
-			b.WriteString(string(out))
+			b.Write(out)
 			b.WriteString("```\n")
 		}
 	}
@@ -285,7 +286,7 @@ func (s *Site) writeLLMsFiles() {
 	outputDir := s.OutputDir()
 
 	// Ensure output directory exists
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
 		slog.Warn("failed to create output directory for llms files", "error", err)
 		return
 	}
@@ -295,7 +296,7 @@ func (s *Site) writeLLMsFiles() {
 	// which use writeIfMissing to allow static/ overrides).
 	writeFile := func(name, content string) {
 		path := filepath.Join(outputDir, name)
-		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 			slog.Warn("failed to write generated file", "file", name, "error", err)
 			return
 		}
@@ -313,13 +314,13 @@ func (s *Site) writeLLMsFiles() {
 		}
 
 		mdPath := s.companionPath(page)
-		if err := os.MkdirAll(filepath.Dir(mdPath), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(mdPath), 0o755); err != nil {
 			slog.Warn("failed to create directory for companion file", "error", err)
 			continue
 		}
 
 		md := CompanionMarkdown(s, page)
-		if err := os.WriteFile(mdPath, []byte(md), 0644); err != nil {
+		if err := os.WriteFile(mdPath, []byte(md), 0o644); err != nil {
 			slog.Warn("failed to write companion markdown", "path", mdPath, "error", err)
 			continue
 		}
@@ -432,7 +433,7 @@ func (s *Site) writePageContents(b *strings.Builder, pages []*content.Page, base
 			b.WriteString(key)
 			b.WriteString("\n\n")
 			b.WriteString("```yaml\n")
-			b.WriteString(string(out))
+			b.Write(out)
 			b.WriteString("```\n\n")
 		}
 	}

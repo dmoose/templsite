@@ -5,6 +5,7 @@ package assets
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -17,33 +18,33 @@ func TestCopyStatic(t *testing.T) {
 
 	// Create input directory structure with static files
 	imagesDir := filepath.Join(inputDir, "images")
-	if err := os.MkdirAll(imagesDir, 0755); err != nil {
+	if err := os.MkdirAll(imagesDir, 0o755); err != nil {
 		t.Fatalf("failed to create images dir: %v", err)
 	}
 
 	fontsDir := filepath.Join(inputDir, "fonts")
-	if err := os.MkdirAll(fontsDir, 0755); err != nil {
+	if err := os.MkdirAll(fontsDir, 0o755); err != nil {
 		t.Fatalf("failed to create fonts dir: %v", err)
 	}
 
 	// Create some static files
 	imageFile := filepath.Join(imagesDir, "logo.png")
-	if err := os.WriteFile(imageFile, []byte("fake png data"), 0644); err != nil {
+	if err := os.WriteFile(imageFile, []byte("fake png data"), 0o644); err != nil {
 		t.Fatalf("failed to write image file: %v", err)
 	}
 
 	fontFile := filepath.Join(fontsDir, "font.woff2")
-	if err := os.WriteFile(fontFile, []byte("fake font data"), 0644); err != nil {
+	if err := os.WriteFile(fontFile, []byte("fake font data"), 0o644); err != nil {
 		t.Fatalf("failed to write font file: %v", err)
 	}
 
 	// Create CSS and JS directories (should be skipped)
 	cssDir := filepath.Join(inputDir, "css")
-	if err := os.MkdirAll(cssDir, 0755); err != nil {
+	if err := os.MkdirAll(cssDir, 0o755); err != nil {
 		t.Fatalf("failed to create css dir: %v", err)
 	}
 	cssFile := filepath.Join(cssDir, "app.css")
-	if err := os.WriteFile(cssFile, []byte("body { color: red; }"), 0644); err != nil {
+	if err := os.WriteFile(cssFile, []byte("body { color: red; }"), 0o644); err != nil {
 		t.Fatalf("failed to write css file: %v", err)
 	}
 
@@ -107,13 +108,13 @@ func TestCopyStaticWithNestedDirectories(t *testing.T) {
 
 	// Create nested directory structure
 	nestedDir := filepath.Join(inputDir, "images", "icons", "social")
-	if err := os.MkdirAll(nestedDir, 0755); err != nil {
+	if err := os.MkdirAll(nestedDir, 0o755); err != nil {
 		t.Fatalf("failed to create nested dir: %v", err)
 	}
 
 	// Create file in nested directory
 	nestedFile := filepath.Join(nestedDir, "twitter.svg")
-	if err := os.WriteFile(nestedFile, []byte("<svg></svg>"), 0644); err != nil {
+	if err := os.WriteFile(nestedFile, []byte("<svg></svg>"), 0o644); err != nil {
 		t.Fatalf("failed to write nested file: %v", err)
 	}
 
@@ -154,13 +155,13 @@ func TestCopyStaticWithContextCancellation(t *testing.T) {
 
 	// Create input directory with files
 	imagesDir := filepath.Join(inputDir, "images")
-	if err := os.MkdirAll(imagesDir, 0755); err != nil {
+	if err := os.MkdirAll(imagesDir, 0o755); err != nil {
 		t.Fatalf("failed to create images dir: %v", err)
 	}
 
 	for i := range 5 {
 		imageFile := filepath.Join(imagesDir, "image"+string(rune('0'+i))+".png")
-		if err := os.WriteFile(imageFile, []byte("fake image"), 0644); err != nil {
+		if err := os.WriteFile(imageFile, []byte("fake image"), 0o644); err != nil {
 			t.Fatalf("failed to write image file: %v", err)
 		}
 	}
@@ -178,7 +179,7 @@ func TestCopyStaticWithContextCancellation(t *testing.T) {
 
 	// Should either complete quickly or return context error
 	err := pipeline.copyStatic(ctx)
-	if err != nil && err != context.Canceled {
+	if err != nil && !errors.Is(err, context.Canceled) {
 		t.Logf("copyStatic with cancelled context: %v", err)
 	}
 }
@@ -190,31 +191,31 @@ func TestCopyStaticSkipsCSSAndJS(t *testing.T) {
 
 	// Create CSS directory
 	cssDir := filepath.Join(inputDir, "css")
-	if err := os.MkdirAll(cssDir, 0755); err != nil {
+	if err := os.MkdirAll(cssDir, 0o755); err != nil {
 		t.Fatalf("failed to create css dir: %v", err)
 	}
 	cssFile := filepath.Join(cssDir, "app.css")
-	if err := os.WriteFile(cssFile, []byte("body {}"), 0644); err != nil {
+	if err := os.WriteFile(cssFile, []byte("body {}"), 0o644); err != nil {
 		t.Fatalf("failed to write css file: %v", err)
 	}
 
 	// Create JS directory
 	jsDir := filepath.Join(inputDir, "js")
-	if err := os.MkdirAll(jsDir, 0755); err != nil {
+	if err := os.MkdirAll(jsDir, 0o755); err != nil {
 		t.Fatalf("failed to create js dir: %v", err)
 	}
 	jsFile := filepath.Join(jsDir, "app.js")
-	if err := os.WriteFile(jsFile, []byte("console.log('test');"), 0644); err != nil {
+	if err := os.WriteFile(jsFile, []byte("console.log('test');"), 0o644); err != nil {
 		t.Fatalf("failed to write js file: %v", err)
 	}
 
 	// Create images directory (should be copied)
 	imagesDir := filepath.Join(inputDir, "images")
-	if err := os.MkdirAll(imagesDir, 0755); err != nil {
+	if err := os.MkdirAll(imagesDir, 0o755); err != nil {
 		t.Fatalf("failed to create images dir: %v", err)
 	}
 	imageFile := filepath.Join(imagesDir, "test.png")
-	if err := os.WriteFile(imageFile, []byte("image"), 0644); err != nil {
+	if err := os.WriteFile(imageFile, []byte("image"), 0o644); err != nil {
 		t.Fatalf("failed to write image file: %v", err)
 	}
 
@@ -256,7 +257,7 @@ func TestCopyFile(t *testing.T) {
 	// Create source file
 	srcFile := filepath.Join(tmpDir, "source.txt")
 	srcContent := "test content"
-	if err := os.WriteFile(srcFile, []byte(srcContent), 0644); err != nil {
+	if err := os.WriteFile(srcFile, []byte(srcContent), 0o644); err != nil {
 		t.Fatalf("failed to write source file: %v", err)
 	}
 
@@ -288,7 +289,7 @@ func TestCopyFilePreservesPermissions(t *testing.T) {
 
 	// Create source file with specific permissions
 	srcFile := filepath.Join(tmpDir, "source.txt")
-	if err := os.WriteFile(srcFile, []byte("test"), 0755); err != nil {
+	if err := os.WriteFile(srcFile, []byte("test"), 0o755); err != nil {
 		t.Fatalf("failed to write source file: %v", err)
 	}
 
@@ -332,10 +333,10 @@ func TestCopyStaticWithMultipleFileTypes(t *testing.T) {
 
 	for path, content := range files {
 		fullPath := filepath.Join(inputDir, path)
-		if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
 			t.Fatalf("failed to create dir for %s: %v", path, err)
 		}
-		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
 			t.Fatalf("failed to write %s: %v", path, err)
 		}
 	}

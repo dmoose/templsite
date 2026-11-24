@@ -25,30 +25,21 @@ func TestFindTailwindCLI(t *testing.T) {
 }
 
 func TestFindTailwindCLIWithLocalBin(t *testing.T) {
-	// Save original working directory
-	origWd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("failed to get working directory: %v", err)
-	}
-	defer func() { _ = os.Chdir(origWd) }()
-
 	// Create a temporary directory structure
 	tmpDir := t.TempDir()
 	binDir := filepath.Join(tmpDir, "bin")
-	if err := os.MkdirAll(binDir, 0755); err != nil {
+	if err := os.MkdirAll(binDir, 0o755); err != nil {
 		t.Fatalf("failed to create bin dir: %v", err)
 	}
 
 	// Create a fake tailwindcss binary
 	fakeBinary := filepath.Join(binDir, "tailwindcss")
-	if err := os.WriteFile(fakeBinary, []byte("#!/bin/sh\necho fake"), 0755); err != nil {
+	if err := os.WriteFile(fakeBinary, []byte("#!/bin/sh\necho fake"), 0o755); err != nil {
 		t.Fatalf("failed to create fake binary: %v", err)
 	}
 
 	// Change to tmpDir so bin/tailwindcss is found
-	if err := os.Chdir(tmpDir); err != nil {
-		t.Fatalf("failed to change directory: %v", err)
-	}
+	t.Chdir(tmpDir)
 
 	result := findTailwindCLI()
 	if result == "" {
@@ -68,7 +59,7 @@ func TestProcessCSSCreatesOutputDirectory(t *testing.T) {
 
 	// Create input directory and CSS file
 	cssDir := filepath.Join(inputDir, "css")
-	if err := os.MkdirAll(cssDir, 0755); err != nil {
+	if err := os.MkdirAll(cssDir, 0o755); err != nil {
 		t.Fatalf("failed to create CSS dir: %v", err)
 	}
 
@@ -78,7 +69,7 @@ func TestProcessCSSCreatesOutputDirectory(t *testing.T) {
 .test {
   color: red;
 }`
-	if err := os.WriteFile(cssInput, []byte(cssContent), 0644); err != nil {
+	if err := os.WriteFile(cssInput, []byte(cssContent), 0o644); err != nil {
 		t.Fatalf("failed to write CSS file: %v", err)
 	}
 
@@ -113,7 +104,7 @@ func TestProcessCSSWithMinify(t *testing.T) {
 
 	// Create input directory and CSS file
 	cssDir := filepath.Join(inputDir, "css")
-	if err := os.MkdirAll(cssDir, 0755); err != nil {
+	if err := os.MkdirAll(cssDir, 0o755); err != nil {
 		t.Fatalf("failed to create CSS dir: %v", err)
 	}
 
@@ -124,7 +115,7 @@ func TestProcessCSSWithMinify(t *testing.T) {
   color: red;
   padding: 10px;
 }`
-	if err := os.WriteFile(cssInput, []byte(cssContent), 0644); err != nil {
+	if err := os.WriteFile(cssInput, []byte(cssContent), 0o644); err != nil {
 		t.Fatalf("failed to write CSS file: %v", err)
 	}
 
@@ -154,12 +145,12 @@ func TestProcessCSSWithContextCancellation(t *testing.T) {
 
 	// Create input directory and CSS file
 	cssDir := filepath.Join(inputDir, "css")
-	if err := os.MkdirAll(cssDir, 0755); err != nil {
+	if err := os.MkdirAll(cssDir, 0o755); err != nil {
 		t.Fatalf("failed to create CSS dir: %v", err)
 	}
 
 	cssInput := filepath.Join(cssDir, "app.css")
-	if err := os.WriteFile(cssInput, []byte(".test { color: red; }"), 0644); err != nil {
+	if err := os.WriteFile(cssInput, []byte(".test { color: red; }"), 0o644); err != nil {
 		t.Fatalf("failed to write CSS file: %v", err)
 	}
 

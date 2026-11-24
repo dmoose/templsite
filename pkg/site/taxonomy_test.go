@@ -187,7 +187,7 @@ func TestTermPageCount(t *testing.T) {
 func TestBuildTaxonomies(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content", "blog")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
@@ -213,7 +213,7 @@ Content`,
 	}
 
 	for name, content := range files {
-		if err := os.WriteFile(filepath.Join(contentDir, name), []byte(content), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(contentDir, name), []byte(content), 0o644); err != nil {
 			t.Fatalf("failed to write file: %v", err)
 		}
 	}
@@ -274,7 +274,7 @@ Content`,
 func TestTaxonomyTermsQuery(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content", "blog")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
@@ -292,7 +292,7 @@ Content`,
 	}
 
 	for name, content := range files {
-		if err := os.WriteFile(filepath.Join(contentDir, name), []byte(content), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(contentDir, name), []byte(content), 0o644); err != nil {
 			t.Fatalf("failed to write file: %v", err)
 		}
 	}
@@ -342,14 +342,14 @@ Content`,
 func TestGetTerm(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content", "blog")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
 	if err := os.WriteFile(
 		filepath.Join(contentDir, "post.md"),
 		[]byte("---\ntitle: Post\ntags: [\"go\"]\n---\nContent"),
-		0644,
+		0o644,
 	); err != nil {
 		t.Fatalf("failed to write file: %v", err)
 	}
@@ -382,14 +382,14 @@ func TestGetTerm(t *testing.T) {
 func TestTagsConvenienceMethod(t *testing.T) {
 	tmpDir := t.TempDir()
 	contentDir := filepath.Join(tmpDir, "content", "blog")
-	if err := os.MkdirAll(contentDir, 0755); err != nil {
+	if err := os.MkdirAll(contentDir, 0o755); err != nil {
 		t.Fatalf("failed to create content dir: %v", err)
 	}
 
 	if err := os.WriteFile(
 		filepath.Join(contentDir, "post.md"),
 		[]byte("---\ntitle: Post\ntags: [\"go\", \"web\"]\n---\nContent"),
-		0644,
+		0o644,
 	); err != nil {
 		t.Fatalf("failed to write file: %v", err)
 	}

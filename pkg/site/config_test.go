@@ -62,7 +62,7 @@ outputDir: "public"
 themeColor: "dark"
 `
 
-	if err := os.WriteFile(configPath, []byte(configYAML), 0644); err != nil {
+	if err := os.WriteFile(configPath, []byte(configYAML), 0o644); err != nil {
 		t.Fatalf("failed to write test config: %v", err)
 	}
 
@@ -116,7 +116,7 @@ title: "Test"
 baseURL: [this is not valid yaml
 `
 
-	if err := os.WriteFile(configPath, []byte(invalidYAML), 0644); err != nil {
+	if err := os.WriteFile(configPath, []byte(invalidYAML), 0o644); err != nil {
 		t.Fatalf("failed to write test config: %v", err)
 	}
 
@@ -153,7 +153,7 @@ assets:
 outputDir: "public"
 `
 
-	if err := os.WriteFile(configPath, []byte(configYAML), 0644); err != nil {
+	if err := os.WriteFile(configPath, []byte(configYAML), 0o644); err != nil {
 		t.Fatalf("failed to write test config: %v", err)
 	}
 
@@ -331,7 +331,7 @@ title: "Partial Config"
 baseURL: "https://example.com"
 `
 
-	if err := os.WriteFile(configPath, []byte(configYAML), 0644); err != nil {
+	if err := os.WriteFile(configPath, []byte(configYAML), 0o644); err != nil {
 		t.Fatalf("failed to write test config: %v", err)
 	}
 
@@ -381,10 +381,10 @@ baseURL: "https://mysite.com"
 description: "Production description"
 `
 
-	if err := os.WriteFile(basePath, []byte(baseYAML), 0644); err != nil {
+	if err := os.WriteFile(basePath, []byte(baseYAML), 0o644); err != nil {
 		t.Fatalf("failed to write base config: %v", err)
 	}
-	if err := os.WriteFile(envPath, []byte(envYAML), 0644); err != nil {
+	if err := os.WriteFile(envPath, []byte(envYAML), 0o644); err != nil {
 		t.Fatalf("failed to write env config: %v", err)
 	}
 
@@ -435,10 +435,10 @@ params:
   analyticsId: "GA-PROD"
 `
 
-	if err := os.WriteFile(basePath, []byte(baseYAML), 0644); err != nil {
+	if err := os.WriteFile(basePath, []byte(baseYAML), 0o644); err != nil {
 		t.Fatalf("failed to write base config: %v", err)
 	}
-	if err := os.WriteFile(envPath, []byte(envYAML), 0644); err != nil {
+	if err := os.WriteFile(envPath, []byte(envYAML), 0o644); err != nil {
 		t.Fatalf("failed to write env config: %v", err)
 	}
 
@@ -479,7 +479,7 @@ assets:
 outputDir: "public"
 `
 
-	if err := os.WriteFile(basePath, []byte(baseYAML), 0644); err != nil {
+	if err := os.WriteFile(basePath, []byte(baseYAML), 0o644); err != nil {
 		t.Fatalf("failed to write base config: %v", err)
 	}
 
@@ -510,7 +510,7 @@ assets:
 outputDir: "public"
 `
 
-	if err := os.WriteFile(basePath, []byte(baseYAML), 0644); err != nil {
+	if err := os.WriteFile(basePath, []byte(baseYAML), 0o644); err != nil {
 		t.Fatalf("failed to write base config: %v", err)
 	}
 

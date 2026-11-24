@@ -19,10 +19,21 @@ All notable changes to templsite are documented in this file.
   `.or` class.
 - goldmark v1.8.7, minify v2.25.0.
 
+### Fixed
+- A static directory that cannot be read fails the build instead of
+  shipping without its files.
+- An asset that cannot be read fails the build instead of being left out
+  of the asset version.
+- The build summary says when its file count is incomplete.
+- `Atom` writes the subtitle it is given.
+- The dev server serves only files inside the output directory, symlinks
+  included, and sets a read-header timeout.
+
 ### Development
 - templ is a `tool` in go.mod; `make generate` and `make ci` run
   `go tool templ` at that version.
-- `make check` runs gochecks and the tests.
+- golangci-lint runs the gochecks profile; `make check` runs gochecks
+  and the tests.
 
 ## v1.2.0
 

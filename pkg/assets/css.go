@@ -5,6 +5,7 @@ package assets
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -35,14 +36,14 @@ func (p *Pipeline) processCSS(ctx context.Context) error {
 	outputFile := filepath.Join(outputDir, "main.css")
 
 	// Create output directory
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
 		return fmt.Errorf("creating output directory: %w", err)
 	}
 
 	// Determine which tailwindcss binary to use
 	tailwindCmd := findTailwindCLI()
 	if tailwindCmd == "" {
-		return fmt.Errorf("tailwindcss CLI not found in PATH or bin/tailwindcss")
+		return errors.New("tailwindcss CLI not found in PATH or bin/tailwindcss")
 	}
 
 	slog.Info("processing CSS", "input", inputFile, "output", outputFile, "minify", p.config.Minify)
@@ -72,8 +73,8 @@ func (p *Pipeline) processCSS(ctx context.Context) error {
 }
 
 // copyCSSStatic copies all CSS files from input to output without processing
-func (p *Pipeline) copyCSSStatic(ctx context.Context, inputDir, outputDir string) error {
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+func (p *Pipeline) copyCSSStatic(_ context.Context, inputDir, outputDir string) error {
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
 		return fmt.Errorf("creating CSS output directory: %w", err)
 	}
 

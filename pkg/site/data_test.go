@@ -12,7 +12,7 @@ import (
 func TestLoadData(t *testing.T) {
 	tmpDir := t.TempDir()
 	dataDir := filepath.Join(tmpDir, "data")
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
+	if err := os.MkdirAll(dataDir, 0o755); err != nil {
 		t.Fatalf("failed to create data dir: %v", err)
 	}
 
@@ -23,13 +23,13 @@ func TestLoadData(t *testing.T) {
 - name: Bob
   role: CTO
 `
-	if err := os.WriteFile(filepath.Join(dataDir, "team.yaml"), []byte(yamlData), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dataDir, "team.yaml"), []byte(yamlData), 0o644); err != nil {
 		t.Fatalf("failed to write YAML file: %v", err)
 	}
 
 	// Create JSON data file
 	jsonData := `{"version": "1.0", "features": ["a", "b", "c"]}`
-	if err := os.WriteFile(filepath.Join(dataDir, "config.json"), []byte(jsonData), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dataDir, "config.json"), []byte(jsonData), 0o644); err != nil {
 		t.Fatalf("failed to write JSON file: %v", err)
 	}
 
@@ -73,12 +73,12 @@ func TestLoadData(t *testing.T) {
 func TestLoadDataNestedDirectories(t *testing.T) {
 	tmpDir := t.TempDir()
 	nestedDir := filepath.Join(tmpDir, "data", "nested", "deep")
-	if err := os.MkdirAll(nestedDir, 0755); err != nil {
+	if err := os.MkdirAll(nestedDir, 0o755); err != nil {
 		t.Fatalf("failed to create nested dir: %v", err)
 	}
 
 	yamlData := `key: value`
-	if err := os.WriteFile(filepath.Join(nestedDir, "settings.yaml"), []byte(yamlData), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(nestedDir, "settings.yaml"), []byte(yamlData), 0o644); err != nil {
 		t.Fatalf("failed to write YAML file: %v", err)
 	}
 
@@ -126,12 +126,12 @@ func TestLoadDataNoDirectory(t *testing.T) {
 func TestLoadDataCustomDataDir(t *testing.T) {
 	tmpDir := t.TempDir()
 	customDir := filepath.Join(tmpDir, "custom_data")
-	if err := os.MkdirAll(customDir, 0755); err != nil {
+	if err := os.MkdirAll(customDir, 0o755); err != nil {
 		t.Fatalf("failed to create custom dir: %v", err)
 	}
 
 	yamlData := `name: custom`
-	if err := os.WriteFile(filepath.Join(customDir, "info.yaml"), []byte(yamlData), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(customDir, "info.yaml"), []byte(yamlData), 0o644); err != nil {
 		t.Fatalf("failed to write YAML file: %v", err)
 	}
 
@@ -175,18 +175,18 @@ func TestGetDataNilData(t *testing.T) {
 func TestLoadDataIgnoresOtherFiles(t *testing.T) {
 	tmpDir := t.TempDir()
 	dataDir := filepath.Join(tmpDir, "data")
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
+	if err := os.MkdirAll(dataDir, 0o755); err != nil {
 		t.Fatalf("failed to create data dir: %v", err)
 	}
 
 	// Create various file types
-	if err := os.WriteFile(filepath.Join(dataDir, "valid.yaml"), []byte("key: value"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dataDir, "valid.yaml"), []byte("key: value"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dataDir, "readme.md"), []byte("# Readme"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dataDir, "readme.md"), []byte("# Readme"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dataDir, "script.sh"), []byte("#!/bin/bash"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dataDir, "script.sh"), []byte("#!/bin/bash"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 

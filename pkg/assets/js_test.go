@@ -5,6 +5,7 @@ package assets
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,7 +19,7 @@ func TestProcessJS(t *testing.T) {
 
 	// Create input directory and JS file
 	jsDir := filepath.Join(inputDir, "js")
-	if err := os.MkdirAll(jsDir, 0755); err != nil {
+	if err := os.MkdirAll(jsDir, 0o755); err != nil {
 		t.Fatalf("failed to create JS dir: %v", err)
 	}
 
@@ -30,7 +31,7 @@ function hello() {
 
 const message = "test";
 `
-	if err := os.WriteFile(jsInput, []byte(jsContent), 0644); err != nil {
+	if err := os.WriteFile(jsInput, []byte(jsContent), 0o644); err != nil {
 		t.Fatalf("failed to write JS file: %v", err)
 	}
 
@@ -72,7 +73,7 @@ func TestProcessJSWithMinify(t *testing.T) {
 
 	// Create input directory and JS file
 	jsDir := filepath.Join(inputDir, "js")
-	if err := os.MkdirAll(jsDir, 0755); err != nil {
+	if err := os.MkdirAll(jsDir, 0o755); err != nil {
 		t.Fatalf("failed to create JS dir: %v", err)
 	}
 
@@ -87,7 +88,7 @@ function   hello  (  )   {
 
 const   message   =   "test"  ;
 `
-	if err := os.WriteFile(jsInput, []byte(jsContent), 0644); err != nil {
+	if err := os.WriteFile(jsInput, []byte(jsContent), 0o644); err != nil {
 		t.Fatalf("failed to write JS file: %v", err)
 	}
 
@@ -129,7 +130,7 @@ func TestProcessJSSkipsWhenNoInput(t *testing.T) {
 	outputDir := filepath.Join(tmpDir, "public", "assets")
 
 	// Create directories but no JS file
-	if err := os.MkdirAll(inputDir, 0755); err != nil {
+	if err := os.MkdirAll(inputDir, 0o755); err != nil {
 		t.Fatalf("failed to create input dir: %v", err)
 	}
 
@@ -162,12 +163,12 @@ func TestProcessJSWithContextCancellation(t *testing.T) {
 
 	// Create input directory and JS file
 	jsDir := filepath.Join(inputDir, "js")
-	if err := os.MkdirAll(jsDir, 0755); err != nil {
+	if err := os.MkdirAll(jsDir, 0o755); err != nil {
 		t.Fatalf("failed to create JS dir: %v", err)
 	}
 
 	jsInput := filepath.Join(jsDir, "app.js")
-	if err := os.WriteFile(jsInput, []byte("console.log('test');"), 0644); err != nil {
+	if err := os.WriteFile(jsInput, []byte("console.log('test');"), 0o644); err != nil {
 		t.Fatalf("failed to write JS file: %v", err)
 	}
 
@@ -195,25 +196,25 @@ func TestProcessJSDirectory(t *testing.T) {
 	outputDir := filepath.Join(tmpDir, "public", "assets", "js")
 
 	// Create input directory structure with multiple JS files
-	if err := os.MkdirAll(filepath.Join(inputDir, "lib"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(inputDir, "lib"), 0o755); err != nil {
 		t.Fatalf("failed to create input dir: %v", err)
 	}
 
 	// Create main.js
 	mainJS := filepath.Join(inputDir, "main.js")
-	if err := os.WriteFile(mainJS, []byte("console.log('main');"), 0644); err != nil {
+	if err := os.WriteFile(mainJS, []byte("console.log('main');"), 0o644); err != nil {
 		t.Fatalf("failed to write main.js: %v", err)
 	}
 
 	// Create lib/utils.js
 	utilsJS := filepath.Join(inputDir, "lib", "utils.js")
-	if err := os.WriteFile(utilsJS, []byte("function util() { return true; }"), 0644); err != nil {
+	if err := os.WriteFile(utilsJS, []byte("function util() { return true; }"), 0o644); err != nil {
 		t.Fatalf("failed to write utils.js: %v", err)
 	}
 
 	// Create a non-JS file (should be ignored)
 	readme := filepath.Join(inputDir, "README.md")
-	if err := os.WriteFile(readme, []byte("# README"), 0644); err != nil {
+	if err := os.WriteFile(readme, []byte("# README"), 0o644); err != nil {
 		t.Fatalf("failed to write README: %v", err)
 	}
 
@@ -256,7 +257,7 @@ func TestProcessJSDirectoryWithMinify(t *testing.T) {
 	outputDir := filepath.Join(tmpDir, "public", "assets", "js")
 
 	// Create input directory with JS file
-	if err := os.MkdirAll(inputDir, 0755); err != nil {
+	if err := os.MkdirAll(inputDir, 0o755); err != nil {
 		t.Fatalf("failed to create input dir: %v", err)
 	}
 
@@ -268,7 +269,7 @@ function test() {
 }
 `
 	jsFile := filepath.Join(inputDir, "app.js")
-	if err := os.WriteFile(jsFile, []byte(jsContent), 0644); err != nil {
+	if err := os.WriteFile(jsFile, []byte(jsContent), 0o644); err != nil {
 		t.Fatalf("failed to write JS file: %v", err)
 	}
 
@@ -305,13 +306,13 @@ func TestProcessJSDirectoryWithContextCancellation(t *testing.T) {
 	outputDir := filepath.Join(tmpDir, "public", "assets", "js")
 
 	// Create input directory with JS files
-	if err := os.MkdirAll(inputDir, 0755); err != nil {
+	if err := os.MkdirAll(inputDir, 0o755); err != nil {
 		t.Fatalf("failed to create input dir: %v", err)
 	}
 
 	for i := range 5 {
 		jsFile := filepath.Join(inputDir, "file"+string(rune('0'+i))+".js")
-		if err := os.WriteFile(jsFile, []byte("console.log('test');"), 0644); err != nil {
+		if err := os.WriteFile(jsFile, []byte("console.log('test');"), 0o644); err != nil {
 			t.Fatalf("failed to write JS file: %v", err)
 		}
 	}
@@ -329,7 +330,7 @@ func TestProcessJSDirectoryWithContextCancellation(t *testing.T) {
 
 	// Should either complete quickly or return context error
 	err := pipeline.processJSDirectory(ctx, inputDir, outputDir)
-	if err != nil && err != context.Canceled {
+	if err != nil && !errors.Is(err, context.Canceled) {
 		t.Logf("processJSDirectory with cancelled context: %v", err)
 	}
 }
@@ -341,12 +342,12 @@ func TestProcessJSCreatesOutputDirectory(t *testing.T) {
 
 	// Create input directory and JS file
 	jsDir := filepath.Join(inputDir, "js")
-	if err := os.MkdirAll(jsDir, 0755); err != nil {
+	if err := os.MkdirAll(jsDir, 0o755); err != nil {
 		t.Fatalf("failed to create JS dir: %v", err)
 	}
 
 	jsInput := filepath.Join(jsDir, "app.js")
-	if err := os.WriteFile(jsInput, []byte("console.log('test');"), 0644); err != nil {
+	if err := os.WriteFile(jsInput, []byte("console.log('test');"), 0o644); err != nil {
 		t.Fatalf("failed to write JS file: %v", err)
 	}
 

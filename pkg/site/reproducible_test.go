@@ -61,10 +61,10 @@ func writeFixture(t *testing.T, dir string, files map[string]string) {
 
 	for name, body := range files {
 		path := filepath.Join(dir, filepath.FromSlash(name))
-		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 			t.Fatalf("creating dir for %s: %v", name, err)
 		}
-		if err := os.WriteFile(path, []byte(body), 0644); err != nil {
+		if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
 			t.Fatalf("writing %s: %v", name, err)
 		}
 	}
@@ -97,22 +97,21 @@ func collectOutput(t *testing.T, dir string) map[string][]byte {
 	t.Helper()
 
 	out := make(map[string][]byte)
-	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+	root, err := os.OpenRoot(dir)
+	if err != nil {
+		t.Fatalf("opening %s: %v", dir, err)
+	}
+	defer func() { _ = root.Close() }()
+	tree := root.FS()
+	err = fs.WalkDir(tree, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+		data, err := fs.ReadFile(tree, path)
 		if err != nil {
 			return err
 		}
-		if d.IsDir() {
-			return nil
-		}
-		rel, err := filepath.Rel(dir, path)
-		if err != nil {
-			return err
-		}
-		data, err := os.ReadFile(path)
-		if err != nil {
-			return err
-		}
-		out[filepath.ToSlash(rel)] = data
+		out[path] = data
 		return nil
 	})
 	if err != nil {

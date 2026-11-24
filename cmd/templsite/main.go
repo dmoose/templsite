@@ -11,8 +11,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/dmoose/templsite/cmd/templsite/commands"
 	"github.com/spf13/cobra"
+
+	"github.com/dmoose/templsite/cmd/templsite/commands"
 )
 
 // Version information set via ldflags at build time
@@ -54,7 +55,7 @@ func newRootCmd(ctx context.Context) *cobra.Command {
 		Long:         "templsite - A modern static site generator built with Go and templ\n\nDocumentation: https://github.com/dmoose/templsite",
 		Version:      fmt.Sprintf("%s (%s) built %s", version, c, buildTime),
 		SilenceUsage: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Help()
 		},
 	}
@@ -65,7 +66,7 @@ func newRootCmd(ctx context.Context) *cobra.Command {
 	root.AddCommand(&cobra.Command{
 		Use:   "version",
 		Short: "Print the version of templsite",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			fmt.Printf("templsite version %s\n", versionStr)
 		},
 	})

@@ -5,7 +5,9 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
@@ -64,9 +66,7 @@ func (s *Server) Serve(ctx context.Context) error {
 	s.liveReload.Start(ctx)
 
 	// Setup file watching
-	if err := s.setupWatching(ctx); err != nil {
-		return fmt.Errorf("setting up file watching: %w", err)
-	}
+	s.setupWatching(ctx)
 
 	// Start file change handler
 	go s.handleFileChanges(ctx)
@@ -77,14 +77,15 @@ func (s *Server) Serve(ctx context.Context) error {
 	mux.HandleFunc("/", s.handleRequest)
 
 	s.server = &http.Server{
-		Addr:    s.addr,
-		Handler: mux,
+		Addr:              s.addr,
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	// Start HTTP server in goroutine
 	serverErr := make(chan error, 1)
 	go func() {
-		slog.Info("development server started", "addr", s.addr, "url", fmt.Sprintf("http://%s", s.addr))
+		slog.Info("development server started", "addr", s.addr, "url", "http://"+s.addr)
 		fmt.Printf("\n✓ Development server running at http://%s\n", s.addr)
 		fmt.Println("  Press Ctrl+C to stop")
 		fmt.Println()
@@ -104,7 +105,7 @@ func (s *Server) Serve(ctx context.Context) error {
 }
 
 // setupWatching configures file system watching
-func (s *Server) setupWatching(ctx context.Context) error {
+func (s *Server) setupWatching(ctx context.Context) {
 	// Watch content directory
 	contentDir := s.site.Config.ContentPath(".")
 	if _, err := os.Stat(contentDir); err == nil {
@@ -143,8 +144,6 @@ func (s *Server) setupWatching(ctx context.Context) error {
 		"content", contentDir,
 		"assets", assetsDir,
 		"components", componentsDir)
-
-	return nil
 }
 
 // addDirRecursive adds a directory and all subdirectories to the watcher
@@ -224,10 +223,17 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	// Log request
 	slog.Debug("request", "method", r.Method, "path", r.URL.Path)
 
-	// Get output directory
-	outputDir := s.site.OutputDir()
+	// Serve from the output directory only: an os.Root refuses any path,
+	// symlink included, that leads outside it.
+	root, err := os.OpenRoot(s.site.OutputDir())
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		slog.Error("opening output directory", "error", err)
+		return
+	}
+	defer func() { _ = root.Close() }()
 
-	// Construct file path
+	// Construct file path, relative to the output directory
 	path := r.URL.Path
 	if path == "/" {
 		path = "/index.html"
@@ -235,14 +241,13 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		// If no extension, try adding /index.html
 		path = filepath.Join(path, "index.html")
 	}
-
-	filePath := filepath.Join(outputDir, path)
+	filePath := strings.TrimPrefix(filepath.Clean(path), "/")
 
 	// Check if file exists
-	info, err := os.Stat(filePath)
+	info, err := root.Stat(filePath)
 	if err != nil {
-		if os.IsNotExist(err) {
-			s.serve404(w, r, outputDir)
+		if errors.Is(err, fs.ErrNotExist) {
+			s.serve404(w, r, root)
 			return
 		}
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -253,16 +258,15 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	// Serve directory index
 	if info.IsDir() {
 		indexPath := filepath.Join(filePath, "index.html")
-		if _, err := os.Stat(indexPath); err == nil {
-			filePath = indexPath
-		} else {
-			s.serve404(w, r, outputDir)
+		if _, err := root.Stat(indexPath); err != nil {
+			s.serve404(w, r, root)
 			return
 		}
+		filePath = indexPath
 	}
 
 	// Read file
-	content, err := os.ReadFile(filePath)
+	content, err := root.ReadFile(filePath)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		slog.Error("read error", "path", filePath, "error", err)
@@ -290,18 +294,17 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Expires", "0")
 
 	// Write response
-	if _, err := w.Write(content); err != nil {
+	if _, err := w.Write(content); err != nil { //nolint:gosec // dev server returns the site's own built files
 		slog.Debug("error writing response", "path", filePath, "error", err)
 	}
 }
 
 // serve404 serves the custom 404.html page if available, otherwise falls back to default
-func (s *Server) serve404(w http.ResponseWriter, r *http.Request, outputDir string) {
+func (s *Server) serve404(w http.ResponseWriter, r *http.Request, root *os.Root) {
 	slog.Debug("file not found", "path", r.URL.Path)
 
 	// Try to serve custom 404.html
-	notFoundPath := filepath.Join(outputDir, "404.html")
-	content, err := os.ReadFile(notFoundPath)
+	content, err := root.ReadFile("404.html")
 	if err != nil {
 		// No custom 404 page, use default
 		http.NotFound(w, r)

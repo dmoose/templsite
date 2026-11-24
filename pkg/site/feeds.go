@@ -128,14 +128,15 @@ func (s *Site) RSS(pages []*content.Page, title, description string) string {
 
 // AtomFeed represents an Atom 1.0 feed
 type AtomFeed struct {
-	XMLName xml.Name    `xml:"feed"`
-	Xmlns   string      `xml:"xmlns,attr"`
-	Title   string      `xml:"title"`
-	Link    []AtomFLink `xml:"link"`
-	Updated string      `xml:"updated"`
-	ID      string      `xml:"id"`
-	Author  *AtomAuthor `xml:"author,omitempty"`
-	Entries []AtomEntry `xml:"entry"`
+	XMLName  xml.Name    `xml:"feed"`
+	Xmlns    string      `xml:"xmlns,attr"`
+	Title    string      `xml:"title"`
+	Subtitle string      `xml:"subtitle,omitempty"`
+	Link     []AtomFLink `xml:"link"`
+	Updated  string      `xml:"updated"`
+	ID       string      `xml:"id"`
+	Author   *AtomAuthor `xml:"author,omitempty"`
+	Entries  []AtomEntry `xml:"entry"`
 }
 
 // AtomFLink represents a link in an Atom feed
@@ -208,8 +209,9 @@ func (s *Site) Atom(pages []*content.Page, title, subtitle string) string {
 	}
 
 	feed := AtomFeed{
-		Xmlns: "http://www.w3.org/2005/Atom",
-		Title: title,
+		Xmlns:    "http://www.w3.org/2005/Atom",
+		Title:    title,
+		Subtitle: subtitle,
 		Link: []AtomFLink{
 			{Href: s.Config.BaseURL, Rel: "alternate"},
 			{Href: feedURL, Rel: "self", Type: "application/atom+xml"},
@@ -335,7 +337,7 @@ func (e jsonEncoder) Encode(v any) error {
 func marshalJSONIndent(v any) ([]byte, error) {
 	// Import encoding/json inline to avoid adding it at package level
 	// when it might not be needed
-	import_json := func() ([]byte, error) {
+	importJSON := func() ([]byte, error) {
 		var buf bytes.Buffer
 		encoder := struct {
 			*bytes.Buffer
@@ -395,7 +397,7 @@ func marshalJSONIndent(v any) ([]byte, error) {
 		return encoder.Bytes(), nil
 	}
 
-	return import_json()
+	return importJSON()
 }
 
 // escapeJSON escapes special characters in JSON strings

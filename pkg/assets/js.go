@@ -62,7 +62,7 @@ func (p *Pipeline) processJSDirectory(ctx context.Context, inputDir, outputDir s
 		outPath := filepath.Join(outputDir, relPath)
 
 		// Read input file
-		input, err := os.ReadFile(path)
+		input, err := os.ReadFile(path) //nolint:gosec // the site's own assets; symlinks out of the tree are allowed
 		if err != nil {
 			return fmt.Errorf("reading %s: %w", path, err)
 		}
@@ -80,12 +80,12 @@ func (p *Pipeline) processJSDirectory(ctx context.Context, inputDir, outputDir s
 		}
 
 		// Create output directory
-		if err := os.MkdirAll(filepath.Dir(outPath), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
 			return fmt.Errorf("creating output directory: %w", err)
 		}
 
 		// Write output file
-		if err := os.WriteFile(outPath, []byte(output), 0644); err != nil {
+		if err := os.WriteFile(outPath, []byte(output), 0o644); err != nil { //nolint:gosec // the input's path under the output dir
 			return fmt.Errorf("writing %s: %w", outPath, err)
 		}
 

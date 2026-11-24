@@ -20,12 +20,12 @@ func setupLLMsTestSite(t *testing.T) *Site {
 
 	// Create content directories
 	for _, dir := range []string{"content/blog", "content/docs", "content/internal"} {
-		if err := os.MkdirAll(filepath.Join(tmpDir, dir), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(tmpDir, dir), 0o755); err != nil {
 			t.Fatalf("failed to create dir: %v", err)
 		}
 	}
 
-	files := map[string]string{
+	files := map[string]string{ //nolint:gosec // fixture page named secret.md, no credentials
 		"content/about.md": `---
 title: "About"
 description: "About this site"
@@ -66,7 +66,7 @@ This should be excluded.`,
 
 	for name, body := range files {
 		path := filepath.Join(tmpDir, name)
-		if err := os.WriteFile(path, []byte(body), 0644); err != nil {
+		if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
 			t.Fatalf("failed to write %s: %v", name, err)
 		}
 	}
@@ -468,14 +468,14 @@ func TestWriteLLMsFiles_AlwaysRegenerates(t *testing.T) {
 	site := setupLLMsTestSite(t)
 
 	outputDir := filepath.Join(t.TempDir(), "public")
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	site.Config.OutputDir = outputDir
 
 	// Pre-create llms.txt with stale content
 	stale := "stale llms.txt content"
-	if err := os.WriteFile(filepath.Join(outputDir, "llms.txt"), []byte(stale), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(outputDir, "llms.txt"), []byte(stale), 0o644); err != nil {
 		t.Fatal(err)
 	}
 

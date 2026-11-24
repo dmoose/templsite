@@ -5,7 +5,6 @@ package site
 
 import (
 	"encoding/xml"
-	"fmt"
 	"time"
 )
 
@@ -109,7 +108,7 @@ func (s *Site) Feed() string {
 	buf = append(buf, []byte(xml.Header)...)
 	data, err := xml.MarshalIndent(feed, "", "  ")
 	if err != nil {
-		return fmt.Sprintf("%s<feed/>", xml.Header)
+		return xml.Header + "<feed/>"
 	}
 	buf = append(buf, data...)
 	buf = append(buf, '\n')

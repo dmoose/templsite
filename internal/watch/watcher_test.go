@@ -88,7 +88,7 @@ func TestWatcherFileChange(t *testing.T) {
 
 	// Create a test file
 	testFile := filepath.Join(tmpDir, "test.md")
-	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
+	if err := os.WriteFile(testFile, []byte("test"), 0o644); err != nil {
 		t.Fatalf("failed to write test file: %v", err)
 	}
 
@@ -123,7 +123,7 @@ func TestWatcherDebouncing(t *testing.T) {
 	// Create multiple files quickly
 	testFile := filepath.Join(tmpDir, "test.md")
 	for range 5 {
-		_ = os.WriteFile(testFile, []byte("content"), 0644)
+		_ = os.WriteFile(testFile, []byte("content"), 0o644)
 		time.Sleep(10 * time.Millisecond)
 	}
 
@@ -215,7 +215,7 @@ func TestWatcherContextCancellation(t *testing.T) {
 
 	// Create a file - should not get an event
 	testFile := filepath.Join(tmpDir, "test.md")
-	_ = os.WriteFile(testFile, []byte("test"), 0644)
+	_ = os.WriteFile(testFile, []byte("test"), 0o644)
 
 	select {
 	case <-w.Events():
@@ -253,7 +253,7 @@ func TestWatcherMultipleFiles(t *testing.T) {
 
 	for _, file := range files {
 		path := filepath.Join(tmpDir, file)
-		if err := os.WriteFile(path, []byte("test"), 0644); err != nil {
+		if err := os.WriteFile(path, []byte("test"), 0o644); err != nil {
 			t.Fatalf("failed to write %s: %v", file, err)
 		}
 	}

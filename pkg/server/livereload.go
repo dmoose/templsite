@@ -28,7 +28,7 @@ func NewLiveReload() *LiveReload {
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
-			CheckOrigin: func(r *http.Request) bool {
+			CheckOrigin: func(_ *http.Request) bool {
 				// Allow all origins in development
 				return true
 			},
