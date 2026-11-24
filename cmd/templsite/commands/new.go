@@ -106,62 +106,8 @@ func runNew(ctx context.Context, sitePath, templateName string, verbose bool, te
 		absPath = sitePath
 	}
 
-	slog.Info("initializing Go module", "module", moduleName)
-
-	// Initialize Go module
-	if err := runGo(ctx, sitePath, "mod", "init", moduleName); err != nil {
-		slog.Warn("go mod init failed, continuing anyway", "error", err)
-	}
-
-	// Add replace directive if local templsite path is provided
-	if templsitePath != "" {
-		absTemplsitePath, err := filepath.Abs(templsitePath)
-		if err != nil {
-			return fmt.Errorf("resolving templsite path: %w", err)
-		}
-
-		slog.Info("adding replace directive for local development", "path", absTemplsitePath)
-		goModPath := filepath.Join(sitePath, "go.mod")
-
-		// Read existing go.mod
-		goModContent, err := os.ReadFile(goModPath)
-		if err != nil {
-			return fmt.Errorf("reading go.mod: %w", err)
-		}
-
-		// Append replace directive
-		replaceDirective := fmt.Sprintf("\n// Local development - remove for production\nreplace github.com/dmoose/templsite => %s\n", absTemplsitePath)
-		goModContent = append(goModContent, []byte(replaceDirective)...)
-		if err := os.WriteFile(goModPath, goModContent, 0o644); err != nil { //nolint:gosec // the site path is the CLI argument
-			return fmt.Errorf("writing go.mod with replace directive: %w", err)
-		}
-	}
-
-	// Resolve templsite first: templ then comes from templsite's
-	// requirement. With the tool line already present, tidy would look the
-	// tool up on its own and take the newest templ release.
-	slog.Info("downloading dependencies")
-	if err := runGo(ctx, sitePath, "mod", "tidy"); err != nil {
-		return fmt.Errorf("resolving templsite: %w", err)
-	}
-
-	// templ as a tool with no version of its own: it is the templ already
-	// in the module graph, and `go tool templ` builds that version.
-	if err := runGo(ctx, sitePath, "mod", "edit", "-tool=github.com/a-h/templ/cmd/templ"); err != nil {
-		return fmt.Errorf("adding templ as a tool: %w", err)
-	}
-	if err := runGo(ctx, sitePath, "mod", "tidy"); err != nil {
-		return fmt.Errorf("resolving templ: %w", err)
-	}
-
-	slog.Info("generating templ components")
-	if err := runGo(ctx, sitePath, "tool", "templ", "generate"); err != nil {
-		return fmt.Errorf("generating templ components: %w", err)
-	}
-
-	// The generated code imports templ directly
-	if err := runGo(ctx, sitePath, "mod", "tidy"); err != nil {
-		return fmt.Errorf("tidying after templ generate: %w", err)
+	if err := setUpModule(ctx, sitePath, moduleName, templsitePath); err != nil {
+		return err
 	}
 
 	// Success message
@@ -260,6 +206,71 @@ func copyFSWithTemplates(sourceFS fs.FS, sourcePath, destPath string, data map[s
 
 		return nil
 	})
+}
+
+// setUpModule makes the scaffolded directory a Go module: templsite
+// (through a replace when templsitePath is set) is resolved first, then
+// templ is added as a tool, so templ is the version templsite requires,
+// and the components are generated with it.
+func setUpModule(ctx context.Context, sitePath, moduleName, templsitePath string) error {
+	slog.Info("initializing Go module", "module", moduleName)
+
+	// Initialize Go module
+	if err := runGo(ctx, sitePath, "mod", "init", moduleName); err != nil {
+		slog.Warn("go mod init failed, continuing anyway", "error", err)
+	}
+
+	// Add replace directive if local templsite path is provided
+	if templsitePath != "" {
+		absTemplsitePath, err := filepath.Abs(templsitePath)
+		if err != nil {
+			return fmt.Errorf("resolving templsite path: %w", err)
+		}
+
+		slog.Info("adding replace directive for local development", "path", absTemplsitePath)
+		goModPath := filepath.Join(sitePath, "go.mod")
+
+		// Read existing go.mod
+		goModContent, err := os.ReadFile(goModPath)
+		if err != nil {
+			return fmt.Errorf("reading go.mod: %w", err)
+		}
+
+		// Append replace directive
+		replaceDirective := fmt.Sprintf("\n// Local development - remove for production\nreplace github.com/dmoose/templsite => %s\n", absTemplsitePath)
+		goModContent = append(goModContent, []byte(replaceDirective)...)
+		if err := os.WriteFile(goModPath, goModContent, 0o644); err != nil { //nolint:gosec // the site path is the CLI argument
+			return fmt.Errorf("writing go.mod with replace directive: %w", err)
+		}
+	}
+
+	// Resolve templsite first: templ then comes from templsite's
+	// requirement. With the tool line already present, tidy would look the
+	// tool up on its own and take the newest templ release.
+	slog.Info("downloading dependencies")
+	if err := runGo(ctx, sitePath, "mod", "tidy"); err != nil {
+		return fmt.Errorf("resolving templsite: %w", err)
+	}
+
+	// templ as a tool with no version of its own: it is the templ already
+	// in the module graph, and `go tool templ` builds that version.
+	if err := runGo(ctx, sitePath, "mod", "edit", "-tool=github.com/a-h/templ/cmd/templ"); err != nil {
+		return fmt.Errorf("adding templ as a tool: %w", err)
+	}
+	if err := runGo(ctx, sitePath, "mod", "tidy"); err != nil {
+		return fmt.Errorf("resolving templ: %w", err)
+	}
+
+	slog.Info("generating templ components")
+	if err := runGo(ctx, sitePath, "tool", "templ", "generate"); err != nil {
+		return fmt.Errorf("generating templ components: %w", err)
+	}
+
+	// The generated code imports templ directly
+	if err := runGo(ctx, sitePath, "mod", "tidy"); err != nil {
+		return fmt.Errorf("tidying after templ generate: %w", err)
+	}
+	return nil
 }
 
 // runGo runs a go command in a specific directory

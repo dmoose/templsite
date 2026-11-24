@@ -10,16 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-)
 
-// offlineGo keeps the go commands these tests run on the module cache
-// and outside any parent go.work.
-func offlineGo(t *testing.T) {
-	t.Helper()
-	t.Setenv("GOWORK", "off")
-	t.Setenv("GOPROXY", "off")
-	t.Setenv("GOFLAGS", "-mod=mod")
-}
+	"github.com/dmoose/templsite/internal/modproxy"
+)
 
 // decoyTempl puts a templ on PATH that records any call and fails, so a
 // test can tell whether PATH was used. It returns the record's path.
@@ -35,46 +28,25 @@ func decoyTempl(t *testing.T) string {
 	return marker
 }
 
-// repoTemplVersion is the templ this module resolves.
-func repoTemplVersion(t *testing.T) string {
-	t.Helper()
-	cmd := exec.Command("go", "list", "-m", "-f", "{{.Version}}", "github.com/a-h/templ")
-	cmd.Dir = filepath.Join("..", "..")
-	out, err := cmd.Output()
-	if err != nil {
-		t.Fatalf("go list -m: %v", err)
-	}
-	return strings.TrimSpace(string(out))
-}
+// siteTempl is the templ stand-in version the test sites require.
+const siteTempl = "v0.1.0"
 
-// templSite writes a module with one component, requiring the templ this
-// repo resolves, with or without templ as a tool.
+// templSite writes a module with one component, requiring the templ
+// stand-in, with or without templ as a tool. The go command reads only
+// the test's own proxy and module cache.
 func templSite(t *testing.T, tool bool) string {
 	t.Helper()
+	modproxy.Serve(t, modproxy.Templ(siteTempl), modproxy.Templ("v0.2.0"))
 	dir := t.TempDir()
-	mod := "module example.com/site\n\ngo 1.26\n\nrequire github.com/a-h/templ " + repoTemplVersion(t) + "\n"
+	mod := "module example.com/site\n\ngo 1.26\n\nrequire " + modproxy.TemplPath + " " + siteTempl + "\n"
 	if tool {
 		mod += "\ntool " + templTool + "\n"
 	}
-	sum, err := os.ReadFile(filepath.Join("..", "..", "go.sum"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	files := map[string]string{
+	modproxy.WriteFiles(t, dir, map[string]string{
 		"go.mod":                 mod,
-		"go.sum":                 string(sum),
 		"components/hello.templ": "package components\n\ntempl Hello() {\n\t<p>hello</p>\n}\n",
 		"content/index.md":       "---\ntitle: Home\n---\nHello\n",
-	}
-	for name, body := range files {
-		p := filepath.Join(dir, name)
-		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
-			t.Fatal(err)
-		}
-	}
+	})
 	if tool {
 		// As a site's own setup does: tidy settles templ's dependencies.
 		cmd := exec.Command("go", "mod", "tidy")
@@ -93,8 +65,7 @@ func siteAt(dir string) *Site {
 }
 
 func TestGenerateTemplComponentsUsesTheModulesTempl(t *testing.T) {
-	offlineGo(t)
-	want := repoTemplVersion(t)
+	want := siteTempl
 	dir := templSite(t, true)
 	marker := decoyTempl(t)
 
@@ -114,7 +85,6 @@ func TestGenerateTemplComponentsUsesTheModulesTempl(t *testing.T) {
 }
 
 func TestGenerateTemplComponentsNeedsTheToolLine(t *testing.T) {
-	offlineGo(t)
 	dir := templSite(t, false)
 	marker := decoyTempl(t)
 
@@ -128,7 +98,6 @@ func TestGenerateTemplComponentsNeedsTheToolLine(t *testing.T) {
 }
 
 func TestBuildDoesNotGenerate(t *testing.T) {
-	offlineGo(t)
 	dir := templSite(t, true)
 	marker := decoyTempl(t)
 
