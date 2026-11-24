@@ -141,7 +141,7 @@ templ pageBody(siteTitle, baseURL string, page *content.Page) {
 
 ### Editing existing components
 
-Open any `.templ` file, make changes, and `make serve` will detect the change, regenerate Go code, recompile, rebuild the site, and reload your browser automatically.
+Open any `.templ` file and make changes, then run `make serve` again: components are compiled into the site binary, so a change to one needs a regenerate and a rebuild. Content, assets and static files reload live while `make serve` runs.
 
 For example, to add a sidebar to the page layout:
 

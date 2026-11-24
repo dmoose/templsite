@@ -6,6 +6,15 @@ All notable changes to templsite are documented in this file.
 
 ### Changed
 - templ v0.3.1118: regenerate with v0.3.1118 when you upgrade.
+- Building a site no longer runs `templ generate`. Generate before
+  `go build`, as the scaffold Makefile does, or call
+  `GenerateTemplComponents`, which runs `go tool templ` and needs templ
+  as a tool in the site's go.mod.
+- `templsite new` adds templ as a go.mod tool with no version of its
+  own, so it resolves to the templ templsite requires. The site Makefile
+  runs `go tool templ`.
+- The dev server logs that a changed `.templ` file needs `make serve`
+  again; the running binary keeps its compiled components.
 - chroma v2.27.0: finer YAML highlighting, and `chroma.css` gains the
   `.or` class.
 - goldmark v1.8.7, minify v2.25.0.

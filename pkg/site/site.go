@@ -6,6 +6,7 @@ package site
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -14,6 +15,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -85,11 +87,6 @@ func (s *Site) Build(ctx context.Context) error {
 	warnIfLocalhostBaseURL(s.Config.BaseURL)
 
 	slog.Info("building site", "title", s.Config.Title)
-
-	// Generate templ components first
-	if err := s.GenerateTemplComponents(ctx); err != nil {
-		return fmt.Errorf("generating templ components: %w", err)
-	}
 
 	// Process content
 	if err := s.ProcessContent(ctx); err != nil {
@@ -459,7 +456,7 @@ func (s *Site) copyStaticFiles() error {
 		destPath := filepath.Join(outputDir, relPath)
 
 		if d.IsDir() {
-			return os.MkdirAll(destPath, 0755)
+			return os.MkdirAll(destPath, 0o755)
 		}
 
 		src, err := os.Open(path)
@@ -468,7 +465,7 @@ func (s *Site) copyStaticFiles() error {
 		}
 		defer func() { _ = src.Close() }()
 
-		if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(destPath), 0o755); err != nil {
 			return err
 		}
 
@@ -523,14 +520,14 @@ func (s *Site) writeGeneratedFiles() {
 	outputDir := s.OutputDir()
 
 	// Ensure output directory exists
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
 		slog.Warn("failed to create output directory for generated files", "error", err)
 		return
 	}
 
 	writeFile := func(name, content string) {
 		path := filepath.Join(outputDir, name)
-		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 			slog.Warn("failed to write generated file", "file", name, "error", err)
 			return
 		}
@@ -556,7 +553,10 @@ func (s *Site) writeGeneratedFiles() {
 	}
 }
 
-// GenerateTemplComponents runs templ generate on the components directory
+// GenerateTemplComponents runs `go tool templ generate` on the components
+// directory, so the generator is the templ the site's go.mod resolves.
+// Build does not call it: a site binary is already compiled, so the site
+// generates before `go build`, as the scaffold Makefile does.
 func (s *Site) GenerateTemplComponents(ctx context.Context) error {
 	componentsPath := filepath.Join(s.baseDir, "components")
 
@@ -566,9 +566,17 @@ func (s *Site) GenerateTemplComponents(ctx context.Context) error {
 		return nil
 	}
 
+	ok, err := hasTemplTool(ctx, s.baseDir)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return fmt.Errorf("%s has no templ tool line in go.mod; add it with `go mod edit -tool=%s` and `go mod tidy`",
+			s.baseDir, templTool)
+	}
 	slog.Debug("generating templ components", "path", componentsPath)
 
-	cmd := exec.CommandContext(ctx, "templ", "generate", "-path", componentsPath)
+	cmd := exec.CommandContext(ctx, "go", "tool", "templ", "generate", "-path", componentsPath)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = s.baseDir
@@ -579,6 +587,26 @@ func (s *Site) GenerateTemplComponents(ctx context.Context) error {
 
 	slog.Debug("templ components generated successfully")
 	return nil
+}
+
+// templTool is the package path of the templ generator as a go.mod tool.
+const templTool = "github.com/a-h/templ/cmd/templ"
+
+// hasTemplTool reports whether the go.mod in dir lists templ as a tool.
+func hasTemplTool(ctx context.Context, dir string) (bool, error) {
+	cmd := exec.CommandContext(ctx, "go", "mod", "edit", "-json")
+	cmd.Dir = dir
+	out, err := cmd.Output()
+	if err != nil {
+		return false, fmt.Errorf("reading go.mod in %s: %w", dir, err)
+	}
+	var mod struct {
+		Tool []struct{ Path string }
+	}
+	if err := json.Unmarshal(out, &mod); err != nil {
+		return false, fmt.Errorf("parsing go mod edit -json: %w", err)
+	}
+	return slices.ContainsFunc(mod.Tool, func(t struct{ Path string }) bool { return t.Path == templTool }), nil
 }
 
 // generateHighlightCSS writes a chroma.css file to the assets output directory
@@ -593,7 +621,7 @@ func (s *Site) generateHighlightCSS() error {
 
 	assetsOutputPath := s.Config.AssetsOutputPath(s.baseDir)
 	cssDir := filepath.Join(assetsOutputPath, "css")
-	if err := os.MkdirAll(cssDir, 0755); err != nil {
+	if err := os.MkdirAll(cssDir, 0o755); err != nil {
 		return fmt.Errorf("creating CSS directory: %w", err)
 	}
 

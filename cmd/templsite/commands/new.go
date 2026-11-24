@@ -17,8 +17,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/dmoose/templsite/cmd/templsite/templates"
 	"github.com/spf13/cobra"
+
+	"github.com/dmoose/templsite/cmd/templsite/templates"
 )
 
 // NewNewCmd creates the "new" command
@@ -78,7 +79,7 @@ func runNew(ctx context.Context, sitePath, templateName string, verbose bool, te
 	}
 
 	// Create site directory
-	if err := os.MkdirAll(sitePath, 0755); err != nil {
+	if err := os.MkdirAll(sitePath, 0o755); err != nil {
 		return fmt.Errorf("creating site directory: %w", err)
 	}
 
@@ -112,10 +113,10 @@ func runNew(ctx context.Context, sitePath, templateName string, verbose bool, te
 		slog.Warn("go mod init failed, continuing anyway", "error", err)
 	}
 
-	// Add templ dependency (required for generated components)
-	slog.Info("adding templ dependency")
-	if err := runCommand(ctx, sitePath, "go", "get", "github.com/a-h/templ@latest"); err != nil {
-		slog.Warn("failed to add templ dependency", "error", err)
+	// templ as a tool with no version of its own: tidy resolves it to the
+	// templ templsite requires, and `go tool templ` builds that version.
+	if err := runCommand(ctx, sitePath, "go", "mod", "edit", "-tool=github.com/a-h/templ/cmd/templ"); err != nil {
+		return fmt.Errorf("adding templ as a tool: %w", err)
 	}
 
 	// Add replace directive if local templsite path is provided
@@ -137,18 +138,22 @@ func runNew(ctx context.Context, sitePath, templateName string, verbose bool, te
 		// Append replace directive
 		replaceDirective := fmt.Sprintf("\n// Local development - remove for production\nreplace github.com/dmoose/templsite => %s\n", absTemplsitePath)
 		goModContent = append(goModContent, []byte(replaceDirective)...)
-		if err := os.WriteFile(goModPath, goModContent, 0644); err != nil {
+		if err := os.WriteFile(goModPath, goModContent, 0o644); err != nil {
 			return fmt.Errorf("writing go.mod with replace directive: %w", err)
 		}
 
-		// Generate templ components first so dependencies are detected
+		// Resolve templsite, and through it templ, before generating
+		slog.Info("downloading dependencies")
+		if err := runCommand(ctx, sitePath, "go", "mod", "tidy"); err != nil {
+			slog.Warn("go mod tidy failed", "error", err)
+		}
+
 		slog.Info("generating templ components")
-		if err := runCommand(ctx, sitePath, "templ", "generate"); err != nil {
+		if err := runCommand(ctx, sitePath, "go", "tool", "templ", "generate"); err != nil {
 			slog.Warn("templ generate failed", "error", err)
 		}
 
-		// Download dependencies (now includes templ after generation)
-		slog.Info("downloading dependencies")
+		// The generated code imports templ directly
 		if err := runCommand(ctx, sitePath, "go", "mod", "tidy"); err != nil {
 			slog.Warn("go mod tidy failed", "error", err)
 		}
@@ -201,7 +206,7 @@ func copyFSWithTemplates(sourceFS fs.FS, sourcePath, destPath string, data map[s
 		if d.IsDir() {
 			// Create directory
 			slog.Debug("creating directory", "path", targetPath)
-			if err := os.MkdirAll(targetPath, 0755); err != nil {
+			if err := os.MkdirAll(targetPath, 0o755); err != nil {
 				return fmt.Errorf("creating directory %q: %w", targetPath, err)
 			}
 			return nil
@@ -250,7 +255,7 @@ func copyFSWithTemplates(sourceFS fs.FS, sourcePath, destPath string, data map[s
 		// Set writable permissions — embedded FS files are read-only
 		// but scaffolded files should be user-editable
 		if info, err := d.Info(); err == nil {
-			mode := info.Mode() | 0200 // ensure owner-writable
+			mode := info.Mode() | 0o200 // ensure owner-writable
 			if err := os.Chmod(targetPath, mode); err != nil {
 				slog.Warn("failed to set file permissions", "path", targetPath, "error", err)
 			}

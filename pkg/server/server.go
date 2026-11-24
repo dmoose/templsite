@@ -189,6 +189,9 @@ func (s *Server) handleFileChanges(ctx context.Context) {
 
 			slog.Info("file changed, rebuilding", "file", path)
 			lastBuild = time.Now()
+			if strings.HasSuffix(path, ".templ") {
+				slog.Warn("components changed: the running site binary still has the old ones; run make serve again", "file", path)
+			}
 
 			// Rebuild the site
 			buildStart := time.Now()
