@@ -13,6 +13,8 @@ All notable changes to templsite are documented in this file.
 - `templsite new` adds templ as a go.mod tool with no version of its
   own, so it resolves to the templ templsite requires. The site Makefile
   runs `go tool templ`.
+- `templsite new` resolves the site's dependencies with or without
+  `--templsite-path`, and stops at a failed step instead of warning.
 - The dev server logs that a changed `.templ` file needs `make serve`
   again; the running binary keeps its compiled components.
 - chroma v2.27.0: finer YAML highlighting, and `chroma.css` gains the
